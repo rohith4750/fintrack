@@ -90,7 +90,7 @@ export async function POST(req: Request) {
         name: body.name,
         email,
         phone: body.phone || "+91 98480 00000",
-        role: "AGENT",
+        role: (body.role as any) || "AGENT",
         status: body.status || "ACTIVE",
         loginId: body.loginId || `AGT-${userId.replace('USR-', '')}`,
         pin: body.pin || "1234",
@@ -127,6 +127,8 @@ export async function PUT(req: Request) {
         where: { OR: [{ id }, { userId: id }] },
         data: {
           ...(body.name ? { name: body.name } : {}),
+          ...(body.role ? { role: body.role as any } : {}),
+          ...(body.email ? { email: body.email } : {}),
           ...(body.phone ? { phone: body.phone } : {}),
           ...(body.status ? { status: body.status } : {}),
           ...(body.pin ? { pin: body.pin } : {}),
