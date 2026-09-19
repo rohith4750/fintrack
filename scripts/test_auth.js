@@ -1,11 +1,11 @@
 async function testAuth() {
   const tests = [
-    { label: "Admin login with 9999", pin: "9999", expectSuccess: true },
+    { label: "Admin login with new PIN 1002", pin: "1002", expectSuccess: true },
     { label: "Agent login with 1234", pin: "1234", expectSuccess: true },
     { label: "Agent login with 7788", pin: "7788", expectSuccess: true },
-    { label: "Rejected old static PIN 0000", pin: "0000", expectSuccess: false },
-    { label: "Rejected old static PIN 1111", pin: "1111", expectSuccess: false },
-    { label: "Rejected random PIN 9998", pin: "9998", expectSuccess: false },
+    { label: "Old Admin PIN 9999 (should now fail)", pin: "9999", expectSuccess: false },
+    { label: "Old static PIN 0000 (should fail)", pin: "0000", expectSuccess: false },
+    { label: "Old static PIN 1111 (should fail)", pin: "1111", expectSuccess: false },
   ];
 
   console.log("Starting Auth Verification Tests against http://localhost:3001/api/auth/login...\n");

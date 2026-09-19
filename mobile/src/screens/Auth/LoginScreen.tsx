@@ -31,7 +31,7 @@ export const LoginScreen: React.FC = () => {
     if (Platform.OS !== 'web') {
       try {
         Vibration.vibrate(80);
-      } catch (err) {}
+      } catch (err) { }
     }
     Animated.sequence([
       Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
@@ -132,7 +132,7 @@ export const LoginScreen: React.FC = () => {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : (
-          <Text style={styles.hintText}>Use 1234 (Agent) or 9999 (Admin)</Text>
+          <Text style={styles.hintText}></Text>
         )}
 
         {isLoading && (

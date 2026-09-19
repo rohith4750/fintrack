@@ -145,7 +145,7 @@ export const initialUsers: User[] = [
     role: "ADMIN",
     status: "ACTIVE",
     loginId: "ADMIN-01",
-    pin: "9999",
+    pin: "1002",
     password: "adminpassword",
     recoveryEfficiency: 98.0,
     todayTarget: 150000,

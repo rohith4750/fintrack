@@ -84,8 +84,8 @@ Scan the QR code with **Expo Go** on your device.
 
 ## 🔐 Default Login Credentials (PIN)
 
-- **Admin Login PIN**: `9999` (or `0000`)
-- **Agent Login PINs**: `1234`, `4321`, `5555` (or any custom PIN created in the Admin Agent panel)
+- **Admin Login PIN**: `1002`
+- **Agent Login PINs**: `1234` (Ramesh Varma), `7788` (T. Sai Kumar), or any custom agent provisioned in the Admin panel
 
 ---
 
