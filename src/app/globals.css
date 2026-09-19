@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --navy-primary: #0b192c;
+    --navy-secondary: #0f2744;
+    --navy-accent: #1e3a8a;
+    --navy-border: #1e293b;
+  }
+
+  * {
+    border-color: #e2e8f0;
+  }
+
+  body {
+    color: var(--foreground);
+    background: #f8fafc;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+
+  /* Universal 5px border radius requirement */
+  button, input, select, textarea, .card, .badge, .modal, .table-container, .popover, .dropdown {
+    border-radius: 5px !important;
+  }
+}
+
+/* Custom compact scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Custom utility components */
+@layer components {
+  .btn-navy {
+    @apply inline-flex items-center justify-center font-medium bg-[#0b192c] hover:bg-[#102a43] text-white border border-[#102a43] px-3 py-1.5 text-xs transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none rounded-[5px];
+  }
+
+  .btn-navy-accent {
+    @apply inline-flex items-center justify-center font-medium bg-[#1e40af] hover:bg-[#1d4ed8] text-white border border-[#1e40af] px-3 py-1.5 text-xs transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none rounded-[5px];
+  }
+
+  .btn-outline-navy {
+    @apply inline-flex items-center justify-center font-medium bg-white hover:bg-slate-50 text-[#0b192c] border border-slate-300 px-3 py-1.5 text-xs transition-all active:scale-[0.98] rounded-[5px];
+  }
+
+  .btn-emerald {
+    @apply inline-flex items-center justify-center font-medium bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 px-3 py-1.5 text-xs transition-all shadow-sm active:scale-[0.98] rounded-[5px];
+  }
+
+  .surface-card {
+    @apply bg-white border border-slate-200 shadow-card p-3 rounded-[5px];
+  }
+
+  .dense-input {
+    @apply w-full bg-white border border-slate-300 text-slate-800 text-xs px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#1e40af] focus:border-[#1e40af] rounded-[5px];
+  }
+
+  .dense-select {
+    @apply w-full bg-white border border-slate-300 text-slate-800 text-xs px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#1e40af] focus:border-[#1e40af] rounded-[5px];
+  }
+
+  .dense-table {
+    @apply w-full text-left text-xs border-collapse;
+  }
+
+  .dense-table th {
+    @apply bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider text-[11px] px-2.5 py-2 border-b border-slate-200;
+  }
+
+  .dense-table td {
+    @apply px-2.5 py-2 border-b border-slate-100 text-slate-700 align-middle;
+  }
+
+  .dense-table tr:hover td {
+    @apply bg-blue-50/40;
+  }
+}
+
+/* Thermal receipt printable styling */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+    background: white;
+    color: black;
+  }
+}

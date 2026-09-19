@@ -1,0 +1,333 @@
+// FinTrack Enterprise Finance Platform Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+}
+
+enum LoanType {
+  WEEKLY
+  MONTHLY
+  DAILY
+  PRODUCT_FINANCE
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  BANK_TRANSFER
+}
+
+enum CustomerStatus {
+  ACTIVE
+  CLOSED
+  BLOCKED
+}
+
+enum LoanStatus {
+  ACTIVE
+  CLOSED
+  OVERDUE
+  DEFAULTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ON_FIELD
+  ABSENT
+  HALF_DAY
+}
+
+enum ProductCategory {
+  MOBILE
+  TV
+  REFRIGERATOR
+  WASHING_MACHINE
+  MOTORCYCLE
+  OTHER
+}
+
+model User {
+  id                 String            @id @default(cuid())
+  userId             String?           @unique // e.g. "USR-01"
+  name               String
+  email              String            @unique
+  phone              String
+  role               UserRole          @default(AGENT)
+  status             String            @default("ACTIVE")
+  loginId            String?
+  pin                String?           @default("1234")
+  password           String?
+  recoveryEfficiency Float?            @default(90.0)
+  todayTarget        Float?            @default(0)
+  todayCollected     Float?            @default(0)
+  maxDailyCashLimit  Float?            @default(75000)
+  assignedRouteIds   String[]          @default([])
+  canCollectCash     Boolean           @default(true)
+  canCollectUPI      Boolean           @default(true)
+  canEditCustomer    Boolean           @default(false)
+  canDisburseLoan    Boolean           @default(false)
+  attendanceStatus   AttendanceStatus? @default(PRESENT)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  routes             Route[]
+  collections        Collection[]
+  loans              Loan[]
+  attendanceRecords  AgentAttendance[]
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  branchId  String   @unique // e.g. "BR-01"
+  code      String   @unique // e.g. "BR-RJY"
+  name      String
+  city      String
+  state     String
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  areas     Area[]
+}
+
+model Area {
+  id               String   @id @default(cuid())
+  areaId           String   @unique // e.g. "AREA-01"
+  name             String
+  code             String   @unique // e.g. "RJY"
+  description      String?
+  totalCustomers   Int      @default(0)
+  activeLoansCount Int      @default(0)
+  totalOutstanding Float    @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  branchId         String
+  branch           Branch   @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
+  routes           Route[]
+  customers        Customer[]
+}
+
+model Route {
+  id                  String   @id @default(cuid())
+  routeId             String   @unique // e.g. "RT-01"
+  name                String
+  code                String   @unique // e.g. "RJY-R-A"
+  collectionFrequency String   @default("WEEKLY") // DAILY, WEEKLY, MONTHLY
+  totalCustomers      Int      @default(0)
+  todayTarget         Float    @default(0)
+  todayCollected      Float    @default(0)
+  status              String   @default("ACTIVE")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  areaId              String
+  area                Area     @relation(fields: [areaId], references: [areaId], onDelete: Cascade)
+  assignedAgentId     String?
+  assignedAgent       User?    @relation(fields: [assignedAgentId], references: [userId])
+  customers           Customer[]
+  loans               Loan[]
+}
+
+model Customer {
+  id               String         @id @default(cuid())
+  customerCode     String         @unique // e.g. "CUST-RJY-001"
+  name             String
+  mobileNumber     String
+  aadhaarNumber    String?
+  address          String?
+  occupation       String?
+  monthlyIncome    Float?         @default(30000)
+  referenceName    String?
+  referenceContact String?
+  status           CustomerStatus @default(ACTIVE)
+  creditScore      Int            @default(750)
+  joinDate         String         @default("2026-09-20")
+  totalLoans       Int            @default(0)
+  activeLoanAmount Float          @default(0)
+  totalOutstanding Float          @default(0)
+  latitude         Float?
+  longitude        Float?
+  landmark         String?
+  locationAddress  String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  areaId           String
+  area             Area           @relation(fields: [areaId], references: [areaId], onDelete: Cascade)
+  routeId          String
+  route            Route          @relation(fields: [routeId], references: [routeId], onDelete: Cascade)
+  loans            Loan[]
+  collections      Collection[]
+  productOrders    ProductFinanceOrder[]
+}
+
+model Loan {
+  id                     String       @id @default(cuid())
+  loanNumber             String       @unique // e.g. "LN-2026-0101"
+  loanType               LoanType     @default(WEEKLY)
+  principalAmount        Float
+  interestRatePercentage Float
+  totalInterestAmount    Float
+  totalRepayableAmount   Float
+  installmentAmount      Float
+  durationUnits          Int
+  disbursementDate       String
+  startDate              String
+  endDate                String
+  totalPaidAmount        Float        @default(0)
+  outstandingBalance     Float
+  nextDueDate            String
+  status                 LoanStatus   @default(ACTIVE)
+  remarks                String?
+  productName            String?
+  productId              String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  customerId             String
+  customer               Customer     @relation(fields: [customerId], references: [customerCode], onDelete: Cascade)
+  routeId                String
+  route                  Route        @relation(fields: [routeId], references: [routeId], onDelete: Cascade)
+  agentId                String?
+  agent                  User?        @relation(fields: [agentId], references: [userId])
+  installments           Installment[]
+  collections            Collection[]
+}
+
+model Installment {
+  id                 String   @id @default(cuid())
+  installmentNumber  Int
+  dueDate            String
+  amount             Float
+  paidAmount         Float    @default(0)
+  paidDate           String?
+  status             String   @default("DUE") // PAID, DUE, OVERDUE
+  receiptNumber      String?
+  collectedByAgentId String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  loanId             String
+  loan               Loan     @relation(fields: [loanId], references: [loanNumber], onDelete: Cascade)
+}
+
+model Collection {
+  id                  String        @id @default(cuid())
+  receiptNumber       String        @unique // e.g. "RCP-2026-8891"
+  amount              Float
+  paymentMethod       PaymentMethod @default(CASH)
+  upiTransactionId    String?
+  collectionDate      String
+  time                String
+  areaName            String?
+  routeName           String?
+  installmentNumber   Int?
+  balanceAfterPayment Float
+  remarks             String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  customerId          String
+  customer            Customer      @relation(fields: [customerId], references: [customerCode], onDelete: Cascade)
+  loanId              String
+  loan                Loan          @relation(fields: [loanId], references: [loanNumber], onDelete: Cascade)
+  agentId             String?
+  agent               User?         @relation(fields: [agentId], references: [userId])
+}
+
+model Product {
+  id                   String          @id @default(cuid())
+  sku                  String          @unique // e.g. "PROD-IPHONE15"
+  name                 String
+  category             ProductCategory @default(MOBILE)
+  brand                String
+  productCost          Float
+  sellingPrice         Float
+  stockQuantity        Int             @default(0)
+  standardDownPayment  Float           @default(0)
+  standardTenureMonths Int             @default(12)
+  status               String          @default("IN_STOCK")
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  orders               ProductFinanceOrder[]
+}
+
+model ProductFinanceOrder {
+  id             String   @id @default(cuid())
+  orderNumber    String   @unique // e.g. "PFO-2026-081"
+  productName    String
+  category       String
+  productCost    Float
+  sellingPrice   Float
+  downPayment    Float
+  financedAmount Float
+  profitMargin   Float
+  tenureMonths   Int
+  monthlyEmi     Float
+  orderDate      String
+  status         String   @default("ACTIVE")
+  serialNumber   String?
+  loanId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  productId      String
+  product        Product  @relation(fields: [productId], references: [sku])
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [customerCode])
+}
+
+model Expense {
+  id            String        @id @default(cuid())
+  voucherNumber String        @unique // e.g. "VCH-2026-041"
+  category      String        @default("FUEL")
+  title         String
+  amount        Float
+  date          String
+  paidTo        String
+  paymentMethod PaymentMethod @default(CASH)
+  approvedBy    String
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model AgentAttendance {
+  id              String            @id @default(cuid())
+  date            String
+  checkInTime     String?
+  checkOutTime    String?
+  status          AttendanceStatus  @default(ON_FIELD)
+  startKilometers Float?
+  endKilometers   Float?
+  remarks         String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  agentId         String
+  agent           User              @relation(fields: [agentId], references: [userId])
+}
+
+model SystemNotification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("INFO")
+  timestamp String   @default("Just now")
+  read      Boolean  @default(false)
+  priority  String   @default("MEDIUM")
+  actionUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
