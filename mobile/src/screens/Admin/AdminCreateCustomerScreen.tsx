@@ -26,6 +26,7 @@ import {
 
 export const AdminCreateCustomerScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [aadhaarNumber, setAadhaarNumber] = useState('');
@@ -35,24 +36,51 @@ export const AdminCreateCustomerScreen: React.FC<{ navigation: any }> = ({ navig
   const [latitude, setLatitude] = useState<string>('');
   const [longitude, setLongitude] = useState<string>('');
   const [selectedRouteId, setSelectedRouteId] = useState('RT-01');
+  const [selectedAgentId, setSelectedAgentId] = useState('USR-02');
   const [guarantorName, setGuarantorName] = useState('');
   const [guarantorPhone, setGuarantorPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
-    loadRoutes();
+    loadData();
   }, []);
 
-  const loadRoutes = async () => {
+  const loadData = async () => {
     try {
-      const list = await ApiService.getRoutes();
-      setRoutes(list);
-      if (list.length > 0) {
-        setSelectedRouteId(list[0].id);
+      const [routeList, agentList] = await Promise.all([
+        ApiService.getRoutes(),
+        ApiService.getAgents(),
+      ]);
+      setRoutes(routeList);
+      setAgents(agentList);
+      if (routeList.length > 0) {
+        setSelectedRouteId(routeList[0].id || routeList[0].routeId || 'RT-01');
+        if (routeList[0].assignedAgentId) {
+          setSelectedAgentId(routeList[0].assignedAgentId);
+        }
+      }
+      if (agentList.length > 0 && !selectedAgentId) {
+        setSelectedAgentId(agentList[0].userId || agentList[0].id || 'USR-02');
       }
     } catch (e) {
-      console.error('Failed to load routes:', e);
+      console.error('Failed to load routes/agents:', e);
+    }
+  };
+
+  const handleRouteSelect = (rId: string) => {
+    setSelectedRouteId(rId);
+    const r = routes.find((item) => item.id === rId || item.routeId === rId);
+    if (r?.assignedAgentId) {
+      setSelectedAgentId(r.assignedAgentId);
+    }
+  };
+
+  const handleAgentSelect = (aId: string) => {
+    setSelectedAgentId(aId);
+    const matchingRoute = routes.find((r) => r.assignedAgentId === aId);
+    if (matchingRoute) {
+      setSelectedRouteId(matchingRoute.id || matchingRoute.routeId || 'RT-01');
     }
   };
 
@@ -88,8 +116,10 @@ export const AdminCreateCustomerScreen: React.FC<{ navigation: any }> = ({ navig
       name: 'Main Road Beat',
       areaId: 'AREA-01',
       areaName: 'Rajahmundry Urban',
-      assignedAgentId: 'USR-02',
+      assignedAgentId: selectedAgentId || 'USR-02',
     };
+
+    const agentObj = agents.find((a) => a.id === selectedAgentId || a.userId === selectedAgentId);
 
     setIsSubmitting(true);
     try {
@@ -106,7 +136,7 @@ export const AdminCreateCustomerScreen: React.FC<{ navigation: any }> = ({ navig
         areaName: routeObj.areaName || 'Rajahmundry Urban',
         routeId: routeObj.id || routeObj.routeId || 'RT-01',
         routeName: routeObj.name,
-        assignedAgentId: routeObj.assignedAgentId || 'USR-02',
+        assignedAgentId: agentObj?.userId || agentObj?.id || selectedAgentId || 'USR-02',
         totalLoans: 0,
         activeLoanAmount: 0,
         totalOutstanding: 0,
@@ -123,7 +153,7 @@ export const AdminCreateCustomerScreen: React.FC<{ navigation: any }> = ({ navig
 
       Alert.alert(
         'Borrower Created Successfully',
-        `Customer ${newCust.fullName} (${newCust.customerCode}) has been registered and synced with database.`,
+        `Customer ${newCust.fullName} (${newCust.customerCode}) registered under Agent ${agentObj?.name || 'Assigned Agent'}.`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (e: any) {
@@ -265,22 +295,65 @@ export const AdminCreateCustomerScreen: React.FC<{ navigation: any }> = ({ navig
           </View>
         </View>
 
-        {/* Route Allocation */}
+        {/* Field Agent Assignment */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Assigned Operational Beat Route</Text>
-          <View style={styles.routeChipsRow}>
-            {routes.map((r) => {
-              const isSelected = selectedRouteId === r.id;
+          <Text style={styles.cardTitle}>Assigned Field Officer / Agent *</Text>
+          <Text style={styles.cardSubtitle}>Directly select the field agent responsible for this borrower:</Text>
+          <View style={styles.agentGrid}>
+            {agents.map((ag) => {
+              const isSelected = selectedAgentId === ag.id || selectedAgentId === ag.userId;
               return (
                 <TouchableOpacity
-                  key={r.id}
-                  onPress={() => setSelectedRouteId(r.id)}
+                  key={ag.id || ag.userId}
+                  onPress={() => handleAgentSelect(ag.userId || ag.id)}
+                  style={[styles.agentSelectCard, isSelected && styles.agentSelectCardActive]}
+                >
+                  <View style={styles.agentSelectHeader}>
+                    <View style={[styles.agentAvatar, isSelected && styles.agentAvatarActive]}>
+                      <Text style={[styles.agentAvatarText, isSelected && styles.agentAvatarTextActive]}>
+                        {ag.name ? ag.name.slice(0, 2).toUpperCase() : 'AG'}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.agentNameText, isSelected && styles.agentNameTextActive]}>
+                        {ag.name}
+                      </Text>
+                      <Text style={styles.agentPhoneText}>{ag.phone || ag.loginId}</Text>
+                    </View>
+                    {isSelected && (
+                      <View style={styles.selectedCheckCircle}>
+                        <Check size={12} color="#FFF" />
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Route Allocation */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Collection Beat Route *</Text>
+          <Text style={styles.cardSubtitle}>Select operating route for scheduled recovery visits:</Text>
+          <View style={styles.routeChipsRow}>
+            {routes.map((r) => {
+              const isSelected = selectedRouteId === r.id || selectedRouteId === r.routeId;
+              return (
+                <TouchableOpacity
+                  key={r.id || r.routeId}
+                  onPress={() => handleRouteSelect(r.id || r.routeId || '')}
                   style={[styles.routeChip, isSelected && styles.routeChipActive]}
                 >
                   <MapPin size={14} color={isSelected ? '#FFF' : Colors.textSecondary} />
-                  <Text style={[styles.routeChipText, isSelected && styles.routeChipTextActive]}>
-                    {r.name}
-                  </Text>
+                  <View>
+                    <Text style={[styles.routeChipText, isSelected && styles.routeChipTextActive]}>
+                      {r.name}
+                    </Text>
+                    <Text style={[styles.routeAreaText, isSelected && styles.routeAreaTextActive]}>
+                      {r.areaName || r.code}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -410,6 +483,81 @@ const styles = StyleSheet.create({
     height: 44,
     color: Colors.text,
     fontSize: 13,
+  },
+  cardSubtitle: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginBottom: 10,
+  },
+  agentGrid: {
+    gap: 8,
+  },
+  agentSelectCard: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  agentSelectCardActive: {
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+    borderColor: '#2563EB',
+  },
+  agentSelectHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  agentAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  agentAvatarActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  agentAvatarText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  agentAvatarTextActive: {
+    color: '#FFF',
+  },
+  agentNameText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  agentNameTextActive: {
+    color: Colors.primaryLight,
+  },
+  agentPhoneText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  selectedCheckCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  routeAreaText: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  routeAreaTextActive: {
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   routeChipsRow: {
     gap: 8,

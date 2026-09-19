@@ -19,12 +19,17 @@ import { Plus, Check, Calendar, IndianRupee, Sparkles } from 'lucide-react-nativ
 export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomerCode, setSelectedCustomerCode] = useState('');
+  const [selectedAgentId, setSelectedAgentId] = useState('USR-02');
+  const [selectedRouteId, setSelectedRouteId] = useState('');
   const [loanType, setLoanType] = useState<LoanType>('WEEKLY');
   const [principalAmount, setPrincipalAmount] = useState('50000');
   const [interestRate, setInterestRate] = useState('14');
   const [durationUnits, setDurationUnits] = useState('60'); // 60 weeks
   const [processingFee, setProcessingFee] = useState('1000');
+  const [remarks, setRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -35,19 +40,38 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
   const loadData = async () => {
     try {
       setLoading(true);
-      const [custList, routeList] = await Promise.all([
+      const [custList, routeList, agentList] = await Promise.all([
         ApiService.getCustomers(),
         ApiService.getRoutes(),
+        ApiService.getAgents(),
       ]);
       setCustomers(custList);
       setRoutes(routeList);
+      setAgents(agentList);
       if (custList.length > 0) {
-        setSelectedCustomerCode(custList[0].customerCode);
+        const firstCust = custList[0];
+        setSelectedCustomerCode(firstCust.customerCode);
+        setSelectedRouteId(firstCust.routeId || (routeList[0]?.id || 'RT-01'));
+        if (firstCust.assignedAgentId) {
+          setSelectedAgentId(firstCust.assignedAgentId);
+        } else if (agentList.length > 0) {
+          setSelectedAgentId(agentList[0].userId || agentList[0].id);
+        }
       }
     } catch (e) {
-      console.error('Failed to load customers for loan disbursal:', e);
+      console.error('Failed to load data for loan disbursal:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectCustomer = (cust: Customer) => {
+    setSelectedCustomerCode(cust.customerCode);
+    if (cust.routeId) {
+      setSelectedRouteId(cust.routeId);
+    }
+    if (cust.assignedAgentId) {
+      setSelectedAgentId(cust.assignedAgentId);
     }
   };
 
@@ -73,12 +97,18 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
       return;
     }
 
-    const routeObj = routes.find((r) => r.id === customer.routeId || r.routeId === customer.routeId) || routes[0] || {
+    const routeObj = routes.find((r) => r.id === selectedRouteId || r.routeId === selectedRouteId || r.id === customer.routeId) || routes[0] || {
       id: 'RT-01',
       routeId: 'RT-01',
       name: 'Main Road Beat',
-      assignedAgentId: 'USR-02',
-      assignedAgentName: 'Suresh Varma',
+      assignedAgentId: selectedAgentId || 'USR-02',
+      assignedAgentName: 'Ramesh Varma',
+    };
+
+    const agentObj = agents.find((a) => a.id === selectedAgentId || a.userId === selectedAgentId) || {
+      id: 'USR-02',
+      userId: 'USR-02',
+      name: 'Ramesh Varma',
     };
 
     setIsSubmitting(true);
@@ -96,21 +126,22 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
         installmentAmount: installmentEmi,
         durationUnits: units,
         loanType,
-        areaId: customer.areaId || 'AREA-01',
-        areaName: customer.areaName || 'Rajahmundry Urban',
+        areaId: customer.areaId || routeObj.areaId || 'AREA-01',
+        areaName: customer.areaName || routeObj.areaName || 'Rajahmundry Urban',
         routeId: routeObj.id || routeObj.routeId || 'RT-01',
         routeName: routeObj.name || 'Main Road Beat',
-        agentId: routeObj.assignedAgentId || 'USR-02',
-        agentName: routeObj.assignedAgentName || 'Suresh Varma',
+        agentId: agentObj.userId || agentObj.id || 'USR-02',
+        agentName: agentObj.name || 'Ramesh Varma',
         disbursementDate: new Date().toISOString().split('T')[0],
         startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        remarks: remarks.trim() || `${loanType} finance disbursed at branch counter`,
       };
 
       await ApiService.disburseLoan(loanPayload);
 
       Alert.alert(
         'Loan Disbursed Successfully',
-        `New loan disbursed for ${customer.fullName} with EMI of ₹${installmentEmi}/${loanType === 'WEEKLY' ? 'Wk' : 'Mo'}. Saved to database.`,
+        `New loan disbursed for ${customer.fullName} assigned to ${agentObj.name} with EMI of ₹${installmentEmi}/${loanType === 'WEEKLY' ? 'Wk' : 'Mo'}. Saved to database.`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (e: any) {
@@ -139,31 +170,121 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Customer Selector */}
+        {/* Customer / Borrower Selector */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Select Borrower / Customer</Text>
+          <Text style={styles.cardTitle}>Select Borrower / Customer *</Text>
+          <Text style={styles.cardSubtitle}>Choose loan recipient from KYC database:</Text>
+          
+          <TextInput
+            style={[styles.input, { marginBottom: 10 }]}
+            value={customerSearch}
+            onChangeText={setCustomerSearch}
+            placeholder="Search borrower by name, code, or phone..."
+            placeholderTextColor={Colors.textMuted}
+          />
+
           {customers.length === 0 ? (
             <Text style={{ color: Colors.textMuted, fontSize: 13, paddingVertical: 8 }}>
-              No borrowers found in database. Please create a customer first.
+              No borrowers found in database. Please onboard a customer first.
             </Text>
           ) : (
-            <View style={styles.customerChipsRow}>
-              {customers.map((c) => {
-                const isSelected = selectedCustomerCode === c.customerCode;
-                return (
-                  <TouchableOpacity
-                    key={c.id || c.customerCode}
-                    onPress={() => setSelectedCustomerCode(c.customerCode)}
-                    style={[styles.customerChip, isSelected && styles.customerChipActive]}
-                  >
-                    <Text style={[styles.customerChipText, isSelected && styles.customerChipTextActive]}>
-                      {c.fullName} ({c.customerCode})
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <ScrollView style={{ maxHeight: 180 }} nestedScrollEnabled>
+              <View style={styles.customerListGrid}>
+                {customers
+                  .filter((c) => {
+                    if (!customerSearch.trim()) return true;
+                    const q = customerSearch.toLowerCase();
+                    return (
+                      c.fullName.toLowerCase().includes(q) ||
+                      c.customerCode.toLowerCase().includes(q) ||
+                      c.phone.includes(q)
+                    );
+                  })
+                  .map((c) => {
+                    const isSelected = selectedCustomerCode === c.customerCode;
+                    return (
+                      <TouchableOpacity
+                        key={c.id || c.customerCode}
+                        onPress={() => handleSelectCustomer(c)}
+                        style={[styles.customerSelectCard, isSelected && styles.customerSelectCardActive]}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.customerNameText, isSelected && styles.customerNameTextActive]}>
+                            {c.fullName}
+                          </Text>
+                          <Text style={styles.customerMetaText}>
+                            {c.customerCode} • {c.phone} • {c.areaName || 'Urban'}
+                          </Text>
+                        </View>
+                        {isSelected && (
+                          <View style={styles.selectedCheckCircle}>
+                            <Check size={12} color="#FFF" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+              </View>
+            </ScrollView>
           )}
+        </View>
+
+        {/* Assigned Field Agent / Admin Selector */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Assigned Recovery Officer / Agent *</Text>
+          <Text style={styles.cardSubtitle}>Select field agent or admin responsible for EMI collection on this loan:</Text>
+          <View style={styles.agentGrid}>
+            {agents.map((ag) => {
+              const isSelected = selectedAgentId === ag.id || selectedAgentId === ag.userId;
+              return (
+                <TouchableOpacity
+                  key={ag.id || ag.userId}
+                  onPress={() => setSelectedAgentId(ag.userId || ag.id || 'USR-02')}
+                  style={[styles.agentSelectCard, isSelected && styles.agentSelectCardActive]}
+                >
+                  <View style={styles.agentSelectHeader}>
+                    <View style={[styles.agentAvatar, isSelected && styles.agentAvatarActive]}>
+                      <Text style={[styles.agentAvatarText, isSelected && styles.agentAvatarTextActive]}>
+                        {ag.name ? ag.name.slice(0, 2).toUpperCase() : 'AG'}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.agentNameText, isSelected && styles.agentNameTextActive]}>
+                        {ag.name} ({ag.role})
+                      </Text>
+                      <Text style={styles.agentPhoneText}>{ag.phone || ag.loginId}</Text>
+                    </View>
+                    {isSelected && (
+                      <View style={styles.selectedCheckCircle}>
+                        <Check size={12} color="#FFF" />
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Collection Beat Route Selector */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Assigned Beat Route *</Text>
+          <View style={styles.routeChipsRow}>
+            {routes.map((r) => {
+              const isSelected = selectedRouteId === r.id || selectedRouteId === r.routeId;
+              return (
+                <TouchableOpacity
+                  key={r.id || r.routeId}
+                  onPress={() => setSelectedRouteId(r.id || r.routeId || '')}
+                  style={[styles.routeChip, isSelected && styles.routeChipActive]}
+                >
+                  <Text style={[styles.routeChipText, isSelected && styles.routeChipTextActive]}>
+                    {r.name} ({r.code || 'Route'})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {/* Loan Type Selector */}
@@ -316,27 +437,127 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 10,
   },
-  customerChipsRow: {
+  cardSubtitle: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginBottom: 10,
+  },
+  customerListGrid: {
     gap: 8,
   },
-  customerChip: {
-    backgroundColor: Colors.background,
+  customerSelectCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 10,
+    padding: 10,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
-    borderRadius: 8,
+  },
+  customerSelectCardActive: {
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+    borderColor: '#2563EB',
+  },
+  customerNameText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  customerNameTextActive: {
+    color: Colors.primaryLight,
+  },
+  customerMetaText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  agentGrid: {
+    gap: 8,
+  },
+  agentSelectCard: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 10,
     padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
   },
-  customerChipActive: {
+  agentSelectCardActive: {
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+    borderColor: '#2563EB',
+  },
+  agentSelectHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  agentAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  agentAvatarActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  agentAvatarText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  agentAvatarTextActive: {
+    color: '#FFF',
+  },
+  agentNameText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  agentNameTextActive: {
+    color: Colors.primaryLight,
+  },
+  agentPhoneText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  selectedCheckCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  routeChipsRow: {
+    gap: 8,
+  },
+  routeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  routeChipActive: {
+    backgroundColor: Colors.primary,
     borderColor: Colors.primary,
-    backgroundColor: 'rgba(37, 99, 235, 0.15)',
   },
-  customerChipText: {
+  routeChipText: {
     fontSize: 13,
     color: Colors.textSecondary,
     fontWeight: '600',
   },
-  customerChipTextActive: {
-    color: Colors.text,
+  routeChipTextActive: {
+    color: '#FFF',
     fontWeight: '700',
   },
   typeRow: {

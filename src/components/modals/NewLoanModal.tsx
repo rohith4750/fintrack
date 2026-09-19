@@ -118,7 +118,14 @@ export const NewLoanModal: React.FC<NewLoanModalProps> = ({
             <label className="text-[11px] font-semibold text-slate-700">Select Borrower / Customer *</label>
             <select
               value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
+              onChange={(e) => {
+                const newCId = e.target.value;
+                setCustomerId(newCId);
+                const c = customers.find((cust) => cust.id === newCId);
+                if (c?.assignedAgentId) {
+                  setAgentId(c.assignedAgentId);
+                }
+              }}
               className="dense-select mt-0.5"
               required
             >
@@ -190,26 +197,28 @@ export const NewLoanModal: React.FC<NewLoanModalProps> = ({
           {/* Agent & Disbursement Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label className="text-[11px] font-semibold text-slate-700">Disbursement Officer / Agent</label>
+              <label className="text-[11px] font-semibold text-slate-700">Assigned Recovery Officer / Agent (or Admin) *</label>
               <select
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
-                className="dense-select mt-0.5"
+                className="dense-select mt-0.5 font-medium text-slate-800"
+                required
               >
-                {users.filter((u) => u.role === "AGENT").map((ag) => (
-                  <option key={ag.id} value={ag.id}>
-                    {ag.name}
+                {users.map((u) => (
+                  <option key={u.id || u.userId} value={u.id || u.userId}>
+                    {u.name} ({u.role}) — {u.phone || u.loginId}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-700">Disbursement Date</label>
+              <label className="text-[11px] font-semibold text-slate-700">Disbursement Date *</label>
               <input
                 type="date"
                 value={disbursementDate}
                 onChange={(e) => setDisbursementDate(e.target.value)}
                 className="dense-input mt-0.5"
+                required
               />
             </div>
           </div>
