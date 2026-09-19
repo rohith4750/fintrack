@@ -331,3 +331,29 @@ model SystemNotification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+enum HandoverStatus {
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+model CashHandover {
+  id               String         @id @default(cuid())
+  handoverNumber   String         @unique // e.g. "HND-2026-001"
+  agentId          String
+  agentName        String
+  date             String
+  time             String
+  totalCashAmount  Float
+  totalUpiAmount   Float          @default(0)
+  totalCollections Int            @default(0)
+  handedOverTo     String         @default("Rajesh Kumar (Admin)")
+  denominations    Json?
+  status           HandoverStatus @default(SUBMITTED)
+  verifiedBy       String?
+  remarks          String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+

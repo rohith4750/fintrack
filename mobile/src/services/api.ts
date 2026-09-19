@@ -645,22 +645,55 @@ export const ApiService = {
     return { id: `ATT-${Date.now()}`, ...attendanceData };
   },
 
-  // Submit Cash Handover
+  // Submit Cash Handover to PostgreSQL Database
   submitCashHandover: async (handoverData: any): Promise<any> => {
     try {
-      const res = await apiClient.post('/expenses', {
-        title: `Cash Handover from ${handoverData.agentName || 'Agent'}`,
-        category: 'MISCELLANEOUS',
-        amount: Number(handoverData.totalCashAmount) || 0,
-        paidTo: handoverData.handedOverTo || 'Manager',
-        paymentMethod: 'CASH',
-        notes: `Total Collections: ₹${handoverData.totalCollections}, UPI: ₹${handoverData.totalUpiAmount}`,
+      const res = await apiClient.post('/handover', {
+        agentId: handoverData.agentId,
+        agentName: handoverData.agentName,
+        date: handoverData.date,
+        time: handoverData.time,
+        totalCashAmount: Number(handoverData.totalCashAmount) || 0,
+        totalUpiAmount: Number(handoverData.totalUpiAmount) || 0,
+        totalCollections: Number(handoverData.totalCollections) || 0,
+        handedOverTo: handoverData.handedOverTo || 'Rajesh Kumar (Admin)',
+        denominations: handoverData.denominations,
+        status: handoverData.status || 'SUBMITTED',
+        remarks: handoverData.managerRemarks || handoverData.remarks || 'Day-End Cash Handover',
       });
-      if (res.data?.success) return res.data.expense;
+      if (res.data?.success && res.data.handover) {
+        return res.data.handover;
+      }
     } catch (e: any) {
-      console.log('Cash handover saved offline');
+      console.log('Cash handover saved locally / offline fallback:', e?.message);
     }
     return { id: `HND-${Date.now()}`, ...handoverData };
+  },
+
+  // Get Cash Handovers (For Admin Verification)
+  getHandovers: async (): Promise<any[]> => {
+    try {
+      const res = await apiClient.get('/handover');
+      if (res.data?.success && Array.isArray(res.data.handovers)) {
+        return res.data.handovers;
+      }
+    } catch (e: any) {
+      console.log('Failed to fetch handovers:', e?.message);
+    }
+    return [];
+  },
+
+  // Verify / Accept Handover (Admin Action)
+  verifyHandover: async (handoverId: string, verifiedBy: string = 'Rajesh Kumar (Admin)'): Promise<boolean> => {
+    try {
+      const res = await apiClient.put(`/handover?id=${handoverId}`, {
+        status: 'VERIFIED',
+        verifiedBy,
+      });
+      return res.data?.success ?? false;
+    } catch (e: any) {
+      return false;
+    }
   },
 
   // Get Today Collections
