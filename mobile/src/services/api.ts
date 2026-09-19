@@ -1,10 +1,12 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Collection, Customer, Loan, Route, User, AgentAttendanceRecord, CashHandoverRecord } from '../types';
 
-// Default Next.js Backend API URLs (Localhost with ADB USB reverse & LAN IP)
-export const DEFAULT_API_BASE_URL = 'http://localhost:3001/api';
+// Default Next.js Backend API URLs (LAN IP for native mobile, localhost for web)
 export const LAN_API_BASE_URL = 'http://192.168.31.178:3001/api';
+export const LOCALHOST_API_BASE_URL = 'http://localhost:3001/api';
+export const DEFAULT_API_BASE_URL = Platform.OS === 'web' ? LOCALHOST_API_BASE_URL : LAN_API_BASE_URL;
 
 const STORAGE_KEYS = {
   API_BASE_URL: '@fintrack_api_base_url',
@@ -44,7 +46,7 @@ apiClient.interceptors.request.use(async (config: any) => {
   return config;
 });
 
-// Fallback attempt to LAN IP if localhost fails
+// Fallback attempt to LAN IP / Localhost if request fails
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -52,13 +54,14 @@ apiClient.interceptors.response.use(
     if (
       error.code === 'ECONNABORTED' ||
       error.message?.includes('Network Error') ||
-      error.message?.includes('timeout')
+      error.message?.includes('timeout') ||
+      error.response?.status === 404
     ) {
       if (!originalRequest._retryWithLan) {
         originalRequest._retryWithLan = true;
         try {
-          const customUrl = await AsyncStorage.getItem(STORAGE_KEYS.API_BASE_URL);
-          const nextBaseUrl = customUrl === LAN_API_BASE_URL ? DEFAULT_API_BASE_URL : LAN_API_BASE_URL;
+          const currentUrl = originalRequest.baseURL || DEFAULT_API_BASE_URL;
+          const nextBaseUrl = currentUrl.includes('localhost') ? LAN_API_BASE_URL : LOCALHOST_API_BASE_URL;
           originalRequest.baseURL = nextBaseUrl;
           await AsyncStorage.setItem(STORAGE_KEYS.API_BASE_URL, nextBaseUrl);
           return await axios(originalRequest);
