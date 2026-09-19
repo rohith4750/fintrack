@@ -33,6 +33,8 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const [loans, setLoans] = useState<Loan[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [handovers, setHandovers] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -41,14 +43,18 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
 
   const loadAdminData = async () => {
     try {
-      const [allLoans, allRoutes, allCustomers] = await Promise.all([
+      const [allLoans, allRoutes, allCustomers, allHandovers, allCollections] = await Promise.all([
         ApiService.getLoans(),
         ApiService.getRoutes(),
         ApiService.getCustomers(),
+        ApiService.getHandovers(),
+        ApiService.getTodayCollections(),
       ]);
       setLoans(allLoans);
       setRoutes(allRoutes);
       setCustomers(allCustomers);
+      setHandovers(allHandovers);
+      setCollections(allCollections);
     } catch (e) {
       console.log('Error loading admin DB data', e);
     }
@@ -60,6 +66,17 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
     setRefreshing(false);
   };
 
+  const handleVerifyHandover = async (handoverId: string) => {
+    try {
+      const success = await ApiService.verifyHandover(handoverId, user?.name || 'Rajesh Kumar (Admin)');
+      if (success) {
+        setHandovers((prev) =>
+          prev.map((h) => (h.id === handoverId ? { ...h, status: 'VERIFIED' } : h))
+        );
+      }
+    } catch (e) {}
+  };
+
   // Admin Financial Calculations
   const totalDisbursed = loans.reduce((sum, l) => sum + l.principalAmount, 0);
   const totalRepayable = loans.reduce((sum, l) => sum + l.totalRepayableAmount, 0);
@@ -67,6 +84,9 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const totalOutstanding = loans.reduce((sum, l) => sum + l.outstandingBalance, 0);
   const grossProfitMargin = totalRepayable - totalDisbursed;
   const overdueCount = loans.filter((l) => l.status === 'OVERDUE' || l.status === 'DEFAULTED').length;
+
+  const todayCashTotal = handovers.reduce((sum, h) => sum + (Number(h.totalCashAmount) || 0), 0);
+  const todayUpiTotal = collections.filter(c => c.paymentMethod === 'UPI').reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
 
   return (
     <View style={styles.container}>
@@ -166,6 +186,90 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
             />
           </View>
         </View>
+
+        {/* Live Field Cash Handovers & Denominations Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Agent Cash Handovers & Denominations</Text>
+          <View style={styles.adminPill}>
+            <ShieldCheck size={12} color={Colors.primaryLight} />
+            <Text style={[styles.adminPillText, { color: Colors.primaryLight }]}>
+              {handovers.length} Submissions
+            </Text>
+          </View>
+        </View>
+
+        {handovers.length === 0 ? (
+          <View style={[styles.card, { padding: 14, alignItems: 'center' }]}>
+            <Text style={{ fontSize: 12, color: Colors.textMuted }}>
+              No day-end cash handovers submitted yet for today.
+            </Text>
+          </View>
+        ) : (
+          handovers.map((h) => {
+            const isVerified = h.status === 'VERIFIED';
+            const den = h.denominations || {};
+            const denList = Object.entries(den)
+              .filter(([_, count]: any) => count > 0)
+              .map(([key, count]) => `${count}x ₹${key.replace('notes', '')}`);
+
+            return (
+              <View key={h.id || h.handoverNumber} style={[styles.card, styles.handoverCard]}>
+                <View style={styles.handoverHeader}>
+                  <View>
+                    <Text style={styles.handoverAgentName}>{h.agentName}</Text>
+                    <Text style={styles.handoverMeta}>
+                      Voucher #{h.handoverNumber || h.id} • {h.time || 'Evening'}
+                    </Text>
+                  </View>
+                  <View style={[styles.statusBadge, isVerified ? styles.statusBadgeVerified : styles.statusBadgePending]}>
+                    <Text style={[styles.statusBadgeText, isVerified ? styles.statusBadgeTextVerified : styles.statusBadgeTextPending]}>
+                      {isVerified ? 'VERIFIED' : 'PENDING'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Amount breakdown */}
+                <View style={styles.handoverAmountRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.handoverLabel}>Cash Handed Over</Text>
+                    <Text style={styles.handoverCashVal}>
+                      ₹{(Number(h.totalCashAmount) || 0).toLocaleString('en-IN')}
+                    </Text>
+                  </View>
+                  {Number(h.totalUpiAmount) > 0 && (
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.handoverLabel}>UPI Collections</Text>
+                      <Text style={styles.handoverUpiVal}>
+                        ₹{(Number(h.totalUpiAmount) || 0).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Denomination Notes */}
+                {denList.length > 0 && (
+                  <View style={styles.denominationsBox}>
+                    <Text style={styles.denominationsTitle}>Denomination Breakdown:</Text>
+                    <Text style={styles.denominationsText}>
+                      {denList.join('  •  ')}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Admin Verify Button */}
+                {!isVerified && (
+                  <TouchableOpacity
+                    onPress={() => handleVerifyHandover(h.id)}
+                    style={styles.verifyBtn}
+                  >
+                    <ShieldCheck size={14} color="#FFF" />
+                    <Text style={styles.verifyBtnText}>Verify & Accept Cash Bundle</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          })
+        )}
 
         {/* Quick Navigation Cards */}
         <View style={styles.sectionHeader}>
@@ -334,7 +438,112 @@ const styles = StyleSheet.create({
   },
   menuSub: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: Colors.textMuted,
     marginTop: 2,
+  },
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    marginBottom: 12,
+  },
+  handoverCard: {
+    backgroundColor: 'rgba(30, 41, 59, 0.7)',
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  handoverHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  handoverAgentName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  handoverMeta: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  statusBadgePending: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+  },
+  statusBadgeVerified: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  statusBadgeTextPending: {
+    color: Colors.warning,
+  },
+  statusBadgeTextVerified: {
+    color: Colors.success,
+  },
+  handoverAmountRow: {
+    flexDirection: 'row',
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  handoverLabel: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  handoverCashVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.success,
+    marginTop: 2,
+  },
+  handoverUpiVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.primaryLight,
+    marginTop: 2,
+  },
+  denominationsBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  denominationsTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    marginBottom: 2,
+  },
+  denominationsText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  verifyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#2563EB',
+    height: 38,
+    borderRadius: 8,
+  },
+  verifyBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
