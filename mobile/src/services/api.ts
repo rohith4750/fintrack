@@ -87,49 +87,21 @@ export const ApiService = {
       console.log('Online login failed, checking offline cached agents...', e?.message);
     }
 
-    // Offline PIN verification from cached agents & admin
-    if (cleanPin === '9999' || cleanPin === '0000' || cleanPin === '1111') {
-      const adminUser: User = {
-        id: 'USR-01',
-        userId: 'USR-01',
-        name: 'Rajesh Kumar (Admin)',
-        email: 'admin@fintrack.in',
-        phone: '+91 98480 12345',
-        role: 'ADMIN',
-        status: 'ACTIVE',
-        pin: cleanPin,
-        loginId: 'ADMIN-01',
-        recoveryEfficiency: 98.0,
-        todayTarget: 150000,
-        todayCollected: 94500,
-        attendanceStatus: 'PRESENT',
-        maxDailyCashLimit: 500000,
-        assignedRouteIds: [],
-        permissions: {
-          canCollectCash: true,
-          canCollectUPI: true,
-          canEditCustomer: true,
-          canDisburseLoan: true,
-          maxDailyCashLimit: 500000,
-        },
-      };
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(adminUser));
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'offline-admin-token');
-      return { success: true, user: adminUser, token: 'offline-admin-token' };
-    }
-
+    // Offline fallback strictly from cached database records
     try {
       const cachedAgentsStr = await AsyncStorage.getItem(STORAGE_KEYS.CACHED_AGENTS);
       if (cachedAgentsStr) {
         const cachedAgents: User[] = JSON.parse(cachedAgentsStr);
-        const dynamicAgent = cachedAgents.find((a) => a.pin === cleanPin || a.loginId === cleanPin || a.userId === cleanPin);
-        if (dynamicAgent) {
-          await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(dynamicAgent));
+        const dynamicUser = cachedAgents.find((a) => a.pin === cleanPin || a.loginId === cleanPin || a.userId === cleanPin || a.phone === cleanPin);
+        if (dynamicUser) {
+          await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(dynamicUser));
           await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'offline-session-token');
-          return { success: true, user: dynamicAgent, token: 'offline-session-token' };
+          return { success: true, user: dynamicUser, token: 'offline-session-token' };
         }
       }
     } catch (err) {}
+
+
 
     return { success: false };
   },

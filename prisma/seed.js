@@ -15,11 +15,11 @@ const initialAreas = [
 ];
 
 const initialUsers = [
-  { userId: "USR-01", name: "K. Srikanth Naidu", email: "admin@fintrack.in", phone: "+91 98480 12345", role: "ADMIN", status: "ACTIVE", recoveryEfficiency: 96.5, todayTarget: 150000, todayCollected: 121100 },
-  { userId: "USR-02", name: "Ramesh Varma", email: "ramesh.varma@fintrack.in", phone: "+91 99590 88712", role: "AGENT", status: "ACTIVE", recoveryEfficiency: 94.2, todayTarget: 51600, todayCollected: 40200, attendanceStatus: "ON_FIELD" },
-  { userId: "USR-03", name: "Suresh Babu", email: "suresh.babu@fintrack.in", phone: "+91 97033 45210", role: "AGENT", status: "ACTIVE", recoveryEfficiency: 91.8, todayTarget: 18500, todayCollected: 16200, attendanceStatus: "ON_FIELD" },
-  { userId: "USR-04", name: "Venkat Rao", email: "venkat.rao@fintrack.in", phone: "+91 94401 67890", role: "AGENT", status: "ACTIVE", recoveryEfficiency: 88.5, todayTarget: 38400, todayCollected: 31200, attendanceStatus: "ON_FIELD" },
-  { userId: "USR-05", name: "Prasad Raju", email: "prasad.raju@fintrack.in", phone: "+91 98492 33451", role: "AGENT", status: "ACTIVE", recoveryEfficiency: 95.0, todayTarget: 42000, todayCollected: 33500, attendanceStatus: "PRESENT" }
+  { userId: "USR-01", name: "Rajesh Kumar (Admin)", email: "admin@fintrack.in", phone: "+91 98480 12345", role: "ADMIN", status: "ACTIVE", pin: "9999", loginId: "ADMIN-01", recoveryEfficiency: 98.0, todayTarget: 150000, todayCollected: 94500, attendanceStatus: "PRESENT", maxDailyCashLimit: 500000, canCollectCash: true, canCollectUPI: true, canEditCustomer: true, canDisburseLoan: true },
+  { userId: "USR-02", name: "Ramesh Varma", email: "ramesh.varma@fintrack.in", phone: "+91 99590 88712", role: "AGENT", status: "ACTIVE", pin: "1234", loginId: "AGT-RJY-02", recoveryEfficiency: 94.2, todayTarget: 51600, todayCollected: 40200, attendanceStatus: "ON_FIELD", maxDailyCashLimit: 75000, canCollectCash: true, canCollectUPI: true, canEditCustomer: true, canDisburseLoan: false },
+  { userId: "USR-03", name: "Suresh Babu", email: "suresh.babu@fintrack.in", phone: "+91 97033 45210", role: "AGENT", status: "ACTIVE", pin: "2389", loginId: "AGT-RJY-03", recoveryEfficiency: 91.8, todayTarget: 18500, todayCollected: 16200, attendanceStatus: "ON_FIELD", maxDailyCashLimit: 50000, canCollectCash: true, canCollectUPI: true, canEditCustomer: false, canDisburseLoan: false },
+  { userId: "USR-04", name: "Venkat Rao", email: "venkat.rao@fintrack.in", phone: "+91 94401 67890", role: "AGENT", status: "ACTIVE", pin: "8821", loginId: "AGT-KKD-04", recoveryEfficiency: 88.5, todayTarget: 38400, todayCollected: 31200, attendanceStatus: "ON_FIELD", maxDailyCashLimit: 60000, canCollectCash: true, canCollectUPI: true, canEditCustomer: true, canDisburseLoan: false },
+  { userId: "USR-05", name: "Prasad Raju", email: "prasad.raju@fintrack.in", phone: "+91 98492 33451", role: "AGENT", status: "ACTIVE", pin: "5512", loginId: "AGT-AMP-05", recoveryEfficiency: 95.0, todayTarget: 42000, todayCollected: 33500, attendanceStatus: "PRESENT", maxDailyCashLimit: 80000, canCollectCash: true, canCollectUPI: true, canEditCustomer: false, canDisburseLoan: false }
 ];
 
 const initialRoutes = [
@@ -89,7 +89,7 @@ async function seed() {
   for (const u of initialUsers) {
     await prisma.user.upsert({
       where: { email: u.email },
-      update: {},
+      update: u,
       create: u,
     });
   }

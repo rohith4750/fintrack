@@ -25,40 +25,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // 2. Admin PIN handling (9999, 0000, 1111)
-    const isAdminPin = pin === "9999" || pin === "0000" || pin === "1111";
-
-    if (!user && isAdminPin) {
-      // Find or create Admin
-      user = await prisma.user.findFirst({
-        where: { role: "ADMIN" },
-        include: { routes: true },
-      });
-
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            userId: "USR-01",
-            name: "Rajesh Kumar (Admin)",
-            email: "admin@fintrack.in",
-            phone: "+91 98480 12345",
-            role: "ADMIN",
-            status: "ACTIVE",
-            pin: "9999",
-            loginId: "ADMIN-01",
-            recoveryEfficiency: 98.0,
-            todayTarget: 150000,
-            todayCollected: 94500,
-            maxDailyCashLimit: 500000,
-            attendanceStatus: "PRESENT",
-          },
-          include: { routes: true },
-        });
-      }
-    }
-
+    // 2. Return 401 if user is not found in the database
     if (!user) {
-      return NextResponse.json({ success: false, message: "Invalid PIN entered" }, { status: 401 });
+      return NextResponse.json({ success: false, message: "Invalid PIN or credentials entered" }, { status: 401 });
     }
 
     const permissions = {
