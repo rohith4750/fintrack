@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../theme/colors';
 import { Typography } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
@@ -38,11 +39,7 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const [collections, setCollections] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadAdminData();
-  }, []);
-
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     try {
       const [allLoans, allRoutes, allCustomers, allHandovers, allCollections] = await Promise.all([
         ApiService.getLoans(),
@@ -59,7 +56,13 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
     } catch (e) {
       console.log('Error loading admin DB data', e);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAdminData();
+    }, [loadAdminData])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -102,31 +105,43 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryLight} />
         }
       >
-        {/* Quick Create Action Bar */}
-        <View style={styles.actionGrid}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AdminDisburseLoan')}
-            style={[styles.actionBtn, { backgroundColor: Colors.primary }]}
-          >
-            <Plus size={16} color="#FFF" />
-            <Text style={styles.actionBtnText}>Disburse Loan</Text>
-          </TouchableOpacity>
+        {/* Quick Create Action Grid (2x2) */}
+        <View style={styles.actionGridContainer}>
+          <View style={styles.actionGridRow}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AdminDisburseLoan')}
+              style={[styles.actionBtn, { backgroundColor: Colors.primary }]}
+            >
+              <Plus size={16} color="#FFF" />
+              <Text style={styles.actionBtnText}>Disburse Loan</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AdminCreateCustomer')}
-            style={[styles.actionBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder }]}
-          >
-            <Users size={16} color={Colors.primaryLight} />
-            <Text style={[styles.actionBtnText, { color: Colors.text }]}>Add Customer</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AdminCreateCustomer')}
+              style={[styles.actionBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder }]}
+            >
+              <Users size={16} color={Colors.primaryLight} />
+              <Text style={[styles.actionBtnText, { color: Colors.text }]}>Add Customer</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AdminCreateAgent')}
-            style={[styles.actionBtn, { backgroundColor: 'rgba(59, 130, 246, 0.15)', borderWidth: 1, borderColor: Colors.primaryLight }]}
-          >
-            <ShieldCheck size={16} color={Colors.primaryLight} />
-            <Text style={[styles.actionBtnText, { color: Colors.primaryLight }]}>Add Agent</Text>
-          </TouchableOpacity>
+          <View style={styles.actionGridRow}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AdminCreateAgent')}
+              style={[styles.actionBtn, { backgroundColor: 'rgba(59, 130, 246, 0.12)', borderWidth: 1, borderColor: Colors.primaryLight }]}
+            >
+              <ShieldCheck size={16} color={Colors.primaryLight} />
+              <Text style={[styles.actionBtnText, { color: Colors.primaryLight }]}>Add Agent</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AdminCreateRoute')}
+              style={[styles.actionBtn, { backgroundColor: 'rgba(245, 158, 11, 0.12)', borderWidth: 1, borderColor: Colors.warning }]}
+            >
+              <MapPin size={16} color={Colors.warning} />
+              <Text style={[styles.actionBtnText, { color: Colors.warning }]}>Add Beat Route</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Company Financial Metrics (Admin Only) */}
@@ -388,10 +403,13 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 90,
   },
-  actionGrid: {
+  actionGridContainer: {
+    marginBottom: 16,
+    gap: 10,
+  },
+  actionGridRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 16,
   },
   actionBtn: {
     flex: 1,

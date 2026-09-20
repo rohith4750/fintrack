@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../theme/colors';
 import { Typography } from '../../theme/typography';
 import { HeaderBar } from '../../components/HeaderBar';
@@ -30,11 +31,7 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
   const [agentName, setAgentName] = useState('Suresh Varma');
   const [dailyTarget, setDailyTarget] = useState('25000');
 
-  useEffect(() => {
-    loadRoutes();
-  }, []);
-
-  const loadRoutes = async () => {
+  const loadRoutes = useCallback(async () => {
     try {
       const list = await ApiService.getRoutes();
       setRoutes(list);
@@ -43,7 +40,13 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadRoutes();
+    }, [loadRoutes])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -152,10 +155,7 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
         onBack={() => navigation.goBack()}
         rightAction={
           <TouchableOpacity
-            onPress={() => {
-              setEditingRouteId(null);
-              setShowAddRoute(!showAddRoute);
-            }}
+            onPress={() => navigation.navigate('AdminCreateRoute')}
             style={styles.addBtn}
           >
             <Plus size={18} color="#FFF" />
@@ -163,13 +163,33 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
         }
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Create / Edit Route Card */}
-        {(showAddRoute || editingRouteId) && (
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>
-              {editingRouteId ? 'Edit Beat Route' : 'Create New Beat Route'}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryLight} />
+        }
+      >
+        {/* Top Banner with Quick Create Button */}
+        <View style={styles.topBanner}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.topBannerTitle}>Regional Beat Routes</Text>
+            <Text style={styles.topBannerSub}>
+              {routes.length} beats active in Rajahmundry Central
             </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.createRouteBtn}
+            onPress={() => navigation.navigate('AdminCreateRoute')}
+          >
+            <Plus size={15} color="#FFF" />
+            <Text style={styles.createRouteBtnText}>Add Beat Route</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Create / Edit Route Card */}
+        {editingRouteId && (
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Edit Beat Route</Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Route Name *</Text>
@@ -220,7 +240,6 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
             <View style={styles.formBtnRow}>
               <TouchableOpacity
                 onPress={() => {
-                  setShowAddRoute(false);
                   setEditingRouteId(null);
                 }}
                 style={styles.cancelBtn}
@@ -229,19 +248,44 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={editingRouteId ? handleSaveEdit : handleCreateRoute}
+                onPress={handleSaveEdit}
                 style={styles.saveBtn}
               >
-                <Text style={styles.saveBtnText}>
-                  {editingRouteId ? 'Save Changes' : 'Create Route'}
-                </Text>
+                <Text style={styles.saveBtnText}>Save Changes</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
+        {/* Loading Spinner */}
+        {loading && (
+          <ActivityIndicator size="large" color={Colors.primaryLight} style={{ marginVertical: 24 }} />
+        )}
+
+        {/* Empty State Card */}
+        {!loading && routes.length === 0 && (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIconBox}>
+              <MapPin size={32} color={Colors.warning} />
+            </View>
+            <Text style={styles.emptyTitle}>No Beat Routes Configured</Text>
+            <Text style={styles.emptySub}>
+              No collection beats found in this operational zone. Create your first operational route to assign field officers and start loan collections.
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyActionBtn}
+              onPress={() => navigation.navigate('AdminCreateRoute')}
+            >
+              <Plus size={16} color="#FFF" />
+              <Text style={styles.emptyActionBtnText}>Create First Beat Route</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Existing Routes List */}
-        <Text style={styles.sectionTitle}>Existing Operational Beats</Text>
+        {!loading && routes.length > 0 && (
+          <Text style={styles.sectionTitle}>Existing Operational Beats</Text>
+        )}
 
         {routes.map((r) => (
           <View key={r.id} style={styles.routeCard}>
@@ -313,6 +357,91 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 90,
+  },
+  topBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    marginBottom: 16,
+    gap: 12,
+  },
+  topBannerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  topBannerSub: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  createRouteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  createRouteBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  emptyCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    marginVertical: 20,
+  },
+  emptyIconBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySub: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  emptyActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyActionBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
   formCard: {
     backgroundColor: Colors.surface,

@@ -26,6 +26,7 @@ import { AdminCustomerListScreen } from '../screens/Admin/AdminCustomerListScree
 import { AdminAgentListScreen } from '../screens/Admin/AdminAgentListScreen';
 import { AdminCreateAgentScreen } from '../screens/Admin/AdminCreateAgentScreen';
 import { AdminRouteAreaScreen } from '../screens/Admin/AdminRouteAreaScreen';
+import { AdminCreateRouteScreen } from '../screens/Admin/AdminCreateRouteScreen';
 import { AdminExpenseScreen } from '../screens/Admin/AdminExpenseScreen';
 import { AdminDisburseLoanScreen } from '../screens/Admin/AdminDisburseLoanScreen';
 import { AdminCreateCustomerScreen } from '../screens/Admin/AdminCreateCustomerScreen';
@@ -246,6 +247,7 @@ export function AppNavigator() {
             <Stack.Screen name="AdminLoans" component={AdminLoanListScreen} />
             <Stack.Screen name="AdminCustomers" component={AdminCustomerListScreen} />
             <Stack.Screen name="AdminRouteArea" component={AdminRouteAreaScreen} />
+            <Stack.Screen name="AdminCreateRoute" component={AdminCreateRouteScreen} />
             <Stack.Screen name="AdminExpenses" component={AdminExpenseScreen} />
             <Stack.Screen name="AdminHandovers" component={AdminHandoverScreen} />
 
