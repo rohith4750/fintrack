@@ -103,12 +103,31 @@ export async function POST(req: Request) {
     const durationUnits = Number(body.durationUnits) || 20;
     const installmentAmount = Number(body.installmentAmount || (totalRepayable / durationUnits));
 
+    // Generate installment schedule
+    const startDateObj = new Date(body.startDate || "2026-09-27");
+    const installmentsData = Array.from({ length: durationUnits }, (_, i) => {
+      const dueDate = new Date(startDateObj);
+      if (body.loanType === "DAILY") {
+        dueDate.setDate(dueDate.getDate() + i);
+      } else if (body.loanType === "MONTHLY") {
+        dueDate.setMonth(dueDate.getMonth() + i);
+      } else {
+        dueDate.setDate(dueDate.getDate() + i * 7);
+      }
+      return {
+        installmentNumber: i + 1,
+        dueDate: dueDate.toISOString().split("T")[0],
+        amount: installmentAmount,
+        status: "DUE",
+      };
+    });
+
     const loan = await prisma.loan.create({
       data: {
         loanNumber,
         customerId: customer.customerCode,
         routeId: route.routeId,
-        agentId: agent ? agent.userId : null,
+        agentId: agent ? agent.userId : (body.agentId || null),
         loanType: (body.loanType || "WEEKLY") as any,
         principalAmount: principal,
         interestRatePercentage: interestRate,
@@ -126,11 +145,17 @@ export async function POST(req: Request) {
         remarks: body.remarks || null,
         productName: body.productName || null,
         productId: body.productId || null,
+        installments: {
+          create: installmentsData,
+        },
       },
       include: {
         customer: true,
         route: true,
         agent: true,
+        installments: {
+          orderBy: { installmentNumber: "asc" },
+        },
       },
     });
 

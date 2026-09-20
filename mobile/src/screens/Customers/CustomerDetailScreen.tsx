@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -29,6 +30,7 @@ import {
   Compass,
   Receipt,
   Banknote,
+  Plus,
 } from 'lucide-react-native';
 
 export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = ({
@@ -44,9 +46,11 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
   const [activeTab, setActiveTab] = useState<'SCHEDULE' | 'TRANSACTIONS' | 'PROFILE'>('SCHEDULE');
   const [isUpdatingGps, setIsUpdatingGps] = useState(false);
 
-  useEffect(() => {
-    loadCustomerData();
-  }, [customerId, customerCode]);
+  useFocusEffect(
+    useCallback(() => {
+      loadCustomerData();
+    }, [customerId, customerCode])
+  );
 
   const loadCustomerData = async () => {
     try {
@@ -477,28 +481,53 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
         )}
 
         {/* Action Button */}
-        {loan && (
-          (loan.status === 'CLOSED' || loan.outstandingBalance <= 0) ? (
+        {loan && (loan.status === 'CLOSED' || loan.outstandingBalance <= 0) ? (
+          <View style={{ gap: 10, marginTop: 10 }}>
             <View style={styles.floatingClosedBanner}>
               <CheckCircle2 size={18} color={Colors.success} />
               <Text style={styles.floatingClosedText}>Loan Fully Settled & Closed</Text>
             </View>
-          ) : (
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate('CollectPayment', {
-                  loanId: loan.id,
-                  customerId: customer.id,
+                navigation.navigate('AdminDisburseLoan', {
+                  customerCode: currentCustomer?.customerCode,
                 })
               }
-              style={styles.floatingCollectBtn}
+              style={[styles.floatingCollectBtn, { backgroundColor: '#10B981', marginTop: 0 }]}
             >
-              <Sparkles size={16} color="#FFF" />
+              <Plus size={16} color="#FFF" />
               <Text style={styles.floatingCollectText}>
-                Collect Payment (₹{loan.installmentAmount}/Wk)
+                Disburse New Loan for {currentCustomer?.fullName.split(' ')[0]}
               </Text>
             </TouchableOpacity>
-          )
+          </View>
+        ) : loan ? (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CollectPayment', {
+                loanId: loan.id,
+                customerId: customer.id,
+              })
+            }
+            style={styles.floatingCollectBtn}
+          >
+            <Sparkles size={16} color="#FFF" />
+            <Text style={styles.floatingCollectText}>
+              Collect Payment (₹{loan.installmentAmount}/Wk)
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('AdminDisburseLoan', {
+                customerCode: currentCustomer?.customerCode,
+              })
+            }
+            style={[styles.floatingCollectBtn, { backgroundColor: '#10B981', marginTop: 14 }]}
+          >
+            <Plus size={16} color="#FFF" />
+            <Text style={styles.floatingCollectText}>Disburse Loan for Borrower</Text>
+          </TouchableOpacity>
         )}
       </ScrollView>
     </View>

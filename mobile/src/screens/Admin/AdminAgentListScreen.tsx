@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -49,9 +50,11 @@ export const AdminAgentListScreen: React.FC<{ navigation: any }> = ({ navigation
   const [editPassword, setEditPassword] = useState('');
   const [showPinMask, setShowPinMask] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   const loadData = async () => {
     try {
@@ -121,6 +124,11 @@ export const AdminAgentListScreen: React.FC<{ navigation: any }> = ({ navigation
   };
 
   const handleDeleteAgent = (agent: User) => {
+    if (agent.role === 'ADMIN') {
+      Alert.alert('Protected Account', 'Administrator accounts cannot be removed.');
+      return;
+    }
+
     Alert.alert(
       'Remove Field Officer',
       `Are you sure you want to remove ${agent.name} (${agent.loginId || agent.phone})?`,
@@ -299,13 +307,20 @@ export const AdminAgentListScreen: React.FC<{ navigation: any }> = ({ navigation
                   <Text style={styles.actionBtnText}>PIN & Security</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => handleDeleteAgent(agent)}
-                  style={styles.actionBtn}
-                >
-                  <Trash2 size={14} color={Colors.danger} />
-                  <Text style={[styles.actionBtnText, { color: Colors.danger }]}>Remove</Text>
-                </TouchableOpacity>
+                {agent.role === 'ADMIN' ? (
+                  <View style={[styles.actionBtn, { borderColor: 'rgba(59, 130, 246, 0.3)', backgroundColor: 'rgba(59, 130, 246, 0.08)' }]}>
+                    <ShieldCheck size={14} color={Colors.primaryLight} />
+                    <Text style={[styles.actionBtnText, { color: Colors.primaryLight }]}>Admin Account</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => handleDeleteAgent(agent)}
+                    style={styles.actionBtn}
+                  >
+                    <Trash2 size={14} color={Colors.danger} />
+                    <Text style={[styles.actionBtnText, { color: Colors.danger }]}>Remove</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           );

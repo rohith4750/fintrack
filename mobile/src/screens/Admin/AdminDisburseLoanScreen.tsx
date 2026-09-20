@@ -13,16 +13,19 @@ import { Colors } from '../../theme/colors';
 import { Typography } from '../../theme/typography';
 import { HeaderBar } from '../../components/HeaderBar';
 import { ApiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { Customer, Route, LoanType } from '../../types';
 import { Plus, Check, Calendar, IndianRupee, Sparkles } from 'lucide-react-native';
 
-export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const AdminDisburseLoanScreen: React.FC<{ navigation: any; route?: any }> = ({ navigation, route }) => {
+  const { user } = useAuth();
+  const preselectedCustomerCode = route?.params?.customerCode || '';
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedCustomerCode, setSelectedCustomerCode] = useState('');
-  const [selectedAgentId, setSelectedAgentId] = useState('USR-02');
+  const [selectedCustomerCode, setSelectedCustomerCode] = useState(preselectedCustomerCode);
+  const [selectedAgentId, setSelectedAgentId] = useState(user?.role === 'AGENT' ? (user.userId || user.id) : 'USR-02');
   const [selectedRouteId, setSelectedRouteId] = useState('');
   const [loanType, setLoanType] = useState<LoanType>('WEEKLY');
   const [principalAmount, setPrincipalAmount] = useState('50000');
@@ -49,11 +52,13 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
       setRoutes(routeList);
       setAgents(agentList);
       if (custList.length > 0) {
-        const firstCust = custList[0];
-        setSelectedCustomerCode(firstCust.customerCode);
-        setSelectedRouteId(firstCust.routeId || (routeList[0]?.id || 'RT-01'));
-        if (firstCust.assignedAgentId) {
-          setSelectedAgentId(firstCust.assignedAgentId);
+        const targetCust = (preselectedCustomerCode && custList.find((c) => c.customerCode === preselectedCustomerCode)) || custList[0];
+        setSelectedCustomerCode(targetCust.customerCode);
+        setSelectedRouteId(targetCust.routeId || (routeList[0]?.id || 'RT-01'));
+        if (user?.role === 'AGENT') {
+          setSelectedAgentId(user.userId || user.id);
+        } else if (targetCust.assignedAgentId) {
+          setSelectedAgentId(targetCust.assignedAgentId);
         } else if (agentList.length > 0) {
           setSelectedAgentId(agentList[0].userId || agentList[0].id);
         }

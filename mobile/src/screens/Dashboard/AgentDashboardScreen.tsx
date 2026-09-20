@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -24,6 +25,8 @@ import {
   ChevronRight,
   ArrowUpRight,
   Clock,
+  Plus,
+  Banknote,
 } from 'lucide-react-native';
 
 export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -33,9 +36,11 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const [collections, setCollections] = useState<Collection[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+    }, [user])
+  );
 
   const loadDashboardData = async () => {
     if (!user) return;
@@ -119,6 +124,29 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
             <ChevronRight size={24} color="#FFF" />
           </View>
         </TouchableOpacity>
+
+        {/* Quick Actions Row */}
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AdminDisburseLoan')}
+            style={styles.quickActionBtn}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
+              <Plus size={16} color={Colors.success} />
+            </View>
+            <Text style={styles.quickActionText}>Disburse Loan</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CashHandover')}
+            style={styles.quickActionBtn}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(234, 179, 8, 0.2)' }]}>
+              <Banknote size={16} color={Colors.warning} />
+            </View>
+            <Text style={styles.quickActionText}>Cash Handover</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Operational KPI Grid */}
         <View style={styles.sectionHeader}>
@@ -445,5 +473,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#FFF',
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  quickActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  quickActionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.text,
   },
 });

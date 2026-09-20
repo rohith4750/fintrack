@@ -206,13 +206,19 @@ export const ApiService = {
 
   // Delete Agent
   deleteAgent: async (agentId: string): Promise<boolean> => {
+    const existing = await ApiService.getAgents();
+    const target = existing.find((a) => a.id === agentId || a.userId === agentId);
+    if (target?.role === 'ADMIN') {
+      console.warn('Cannot delete ADMIN user account');
+      return false;
+    }
+
     try {
       await apiClient.delete(`/agents?id=${agentId}`);
     } catch (e: any) {
       console.error('API deleteAgent error:', e?.message);
     }
 
-    const existing = await ApiService.getAgents();
     const updated = existing.filter((a) => a.id !== agentId && a.userId !== agentId);
     await AsyncStorage.setItem(STORAGE_KEYS.CACHED_AGENTS, JSON.stringify(updated));
     return true;
@@ -530,7 +536,23 @@ export const ApiService = {
           agentName: l.agent?.name || 'Suresh Varma',
           installments: l.installments,
         }));
-        await AsyncStorage.setItem(STORAGE_KEYS.CACHED_LOANS, JSON.stringify(mapped));
+
+        if (!agentId || agentId === 'ALL') {
+          await AsyncStorage.setItem(STORAGE_KEYS.CACHED_LOANS, JSON.stringify(mapped));
+        } else {
+          try {
+            const existingCachedRaw = await AsyncStorage.getItem(STORAGE_KEYS.CACHED_LOANS);
+            const existingCached: Loan[] = existingCachedRaw ? JSON.parse(existingCachedRaw) : [];
+            const merged = [...mapped];
+            const fetchedIds = new Set(mapped.map((l: Loan) => l.id));
+            existingCached.forEach((item) => {
+              if (!fetchedIds.has(item.id)) {
+                merged.push(item);
+              }
+            });
+            await AsyncStorage.setItem(STORAGE_KEYS.CACHED_LOANS, JSON.stringify(merged));
+          } catch (e) {}
+        }
         return routeId && routeId !== 'ALL' ? mapped.filter((item: Loan) => item.routeId === routeId) : mapped;
       }
     } catch (e: any) {

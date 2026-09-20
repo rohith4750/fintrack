@@ -160,6 +160,16 @@ export async function DELETE(req: Request) {
     const id = searchParams.get("id");
 
     if (id) {
+      const userToDelete = await prisma.user.findFirst({
+        where: { OR: [{ id }, { userId: id }] },
+      });
+      if (userToDelete?.role === "ADMIN") {
+        return NextResponse.json(
+          { success: false, error: "Administrator accounts are protected and cannot be deleted." },
+          { status: 403 }
+        );
+      }
+
       await prisma.user.deleteMany({
         where: { OR: [{ id }, { userId: id }] },
       });

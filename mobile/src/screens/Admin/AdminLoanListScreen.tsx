@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -32,9 +33,11 @@ export const AdminLoanListScreen: React.FC<{ navigation: any }> = ({ navigation 
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'OVERDUE' | 'CLOSED'>('ALL');
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadLoans();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadLoans();
+    }, [])
+  );
 
   const loadLoans = async () => {
     const list = await ApiService.getLoans();
