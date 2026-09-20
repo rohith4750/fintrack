@@ -86,7 +86,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const todayStr = "2026-09-20";
   const todayCollections = collections.filter((c) => c.collectionDate === todayStr);
   const todayCollectedAmount = todayCollections.reduce((acc, c) => acc + c.amount, 0);
-  const todayTargetAmount = routes.reduce((acc, r) => acc + r.todayTarget, 0) || (currentAgent?.todayTarget || 50000);
+  const todayTargetAmount = routes.reduce((acc, r) => acc + (r.todayTarget || 0), 0) || (currentAgent?.todayTarget || 50000);
   const todayProgressPercent = Math.min(100, Math.round((todayCollectedAmount / (todayTargetAmount || 1)) * 100));
 
   // Weekly & Monthly Collections

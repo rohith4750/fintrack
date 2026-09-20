@@ -54,7 +54,6 @@ export async function POST(req: Request) {
         areaName: body.areaName?.trim() || "Rajahmundry Urban",
         assignedAgentId: validAgentId,
         collectionFrequency: body.collectionFrequency || "WEEKLY",
-        todayTarget: Number(body.todayTarget) || 25000,
         status: "ACTIVE",
       },
       include: {
@@ -84,7 +83,6 @@ export async function PUT(req: Request) {
           ...(body.code ? { code: body.code.toUpperCase() } : {}),
           ...(body.areaName ? { areaName: body.areaName } : {}),
           ...(body.assignedAgentId ? { assignedAgentId: body.assignedAgentId } : {}),
-          ...(body.todayTarget !== undefined ? { todayTarget: Number(body.todayTarget) } : {}),
         },
       });
     }

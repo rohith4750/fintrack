@@ -39,7 +39,6 @@ export const AdminCreateAgentScreen: React.FC<{ navigation: any }> = ({ navigati
   const [showPin, setShowPin] = useState(false);
 
   // Financial & Route
-  const [todayTarget, setTodayTarget] = useState('35000');
   const [maxCashLimit, setMaxCashLimit] = useState('75000');
   const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>([]);
 
@@ -107,7 +106,6 @@ export const AdminCreateAgentScreen: React.FC<{ navigation: any }> = ({ navigati
         pin: pin.trim(),
         password: password.trim() || 'agentpassword',
         recoveryEfficiency: 95.0,
-        todayTarget: Number(todayTarget) || 35000,
         todayCollected: 0,
         attendanceStatus: 'ON_FIELD',
         maxDailyCashLimit: Number(maxCashLimit) || 75000,
@@ -247,34 +245,21 @@ export const AdminCreateAgentScreen: React.FC<{ navigation: any }> = ({ navigati
           </View>
         </View>
 
-        {/* Financial Targets & Cash Limit */}
+        {/* Cash Limit */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Financial Parameters & Cash Limits</Text>
+          <Text style={styles.cardTitle}>Field Cash Holding Limit</Text>
 
-          <View style={styles.inputRow}>
-            <View style={{ flex: 1, marginRight: 6 }}>
-              <Text style={styles.inputLabel}>Daily Target (₹)</Text>
-              <TextInput
-                style={styles.input}
-                value={todayTarget}
-                onChangeText={setTodayTarget}
-                keyboardType="numeric"
-                placeholder="35000"
-                placeholderTextColor={Colors.textMuted}
-              />
-            </View>
-
-            <View style={{ flex: 1, marginLeft: 6 }}>
-              <Text style={styles.inputLabel}>Max Cash Limit (₹)</Text>
-              <TextInput
-                style={[styles.input, { color: Colors.success }]}
-                value={maxCashLimit}
-                onChangeText={setMaxCashLimit}
-                keyboardType="numeric"
-                placeholder="75000"
-                placeholderTextColor={Colors.textMuted}
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Max Daily Cash Holding Limit (₹)</Text>
+            <TextInput
+              style={[styles.input, { color: Colors.success }]}
+              value={maxCashLimit}
+              onChangeText={setMaxCashLimit}
+              keyboardType="numeric"
+              placeholder="75000"
+              placeholderTextColor={Colors.textMuted}
+            />
+            <Text style={styles.helperText}>Threshold for mandatory cash handover / vault deposit</Text>
           </View>
         </View>
 

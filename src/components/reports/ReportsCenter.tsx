@@ -147,15 +147,16 @@ export const ReportsCenter: React.FC<ReportsCenterProps> = ({
             </thead>
             <tbody>
               {routes.map((r) => {
-                const deficit = Math.max(0, r.todayTarget - r.todayCollected);
-                const rate = Math.min(100, Math.round((r.todayCollected / (r.todayTarget || 1)) * 100));
+                const target = r.todayTarget || 0;
+                const deficit = Math.max(0, target - r.todayCollected);
+                const rate = Math.min(100, Math.round((r.todayCollected / (target || 1)) * 100));
                 return (
                   <tr key={r.id}>
                     <td className="font-bold text-slate-900">{r.name}</td>
                     <td>{r.areaName}</td>
                     <td className="font-semibold text-slate-800">{r.assignedAgentName}</td>
                     <td><span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-[5px] font-bold">{r.collectionFrequency}</span></td>
-                    <td className="font-medium text-slate-700">{formatINR(r.todayTarget)}</td>
+                    <td className="font-medium text-slate-700">{formatINR(target)}</td>
                     <td className="font-bold text-emerald-700">{formatINR(r.todayCollected)}</td>
                     <td className="font-medium text-rose-600">{formatINR(deficit)}</td>
                     <td className="text-right font-bold text-[#1e40af]">{rate}%</td>

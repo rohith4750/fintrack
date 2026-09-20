@@ -59,7 +59,7 @@ export interface Route {
   assignedAgentName: string;
   collectionFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
   totalCustomers: number;
-  todayTarget: number;
+  todayTarget?: number;
   todayCollected: number;
   status: 'ACTIVE' | 'INACTIVE';
 }

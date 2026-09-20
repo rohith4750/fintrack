@@ -37,7 +37,6 @@ export async function POST(req: Request) {
             code: "RT-RJY-01",
             areaName: body.areaName || "Rajahmundry Urban",
             collectionFrequency: "WEEKLY",
-            todayTarget: 25000,
             status: "ACTIVE",
           },
         });

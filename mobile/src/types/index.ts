@@ -26,7 +26,6 @@ export interface User {
   pin?: string;
   password?: string;
   recoveryEfficiency?: number;
-  todayTarget?: number;
   todayCollected?: number;
   attendanceStatus?: AttendanceStatus;
   maxDailyCashLimit?: number;
@@ -148,7 +147,6 @@ export interface Route {
   assignedAgentName: string;
   collectionDay: string;
   totalCustomers: number;
-  todayTarget: number;
   todayCollected: number;
 }
 

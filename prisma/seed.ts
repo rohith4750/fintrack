@@ -18,16 +18,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Seeding FinTrack database DD...");
 
-  // 1. Branches
-  for (const b of initialBranches) {
-    await prisma.branch.upsert({
-      where: { branchId: b.id },
-      update: {},
-      create: { branchId: b.id, code: b.code, name: b.name, city: b.city, state: b.state, phone: b.phone },
-    });
-  }
-  console.log("✓ Branches seeded");
-
   // 2. Users
   for (const u of initialUsers) {
     await prisma.user.upsert({
@@ -41,7 +31,6 @@ async function main() {
         role: u.role as any,
         status: u.status,
         recoveryEfficiency: u.recoveryEfficiency || 90,
-        todayTarget: u.todayTarget || 0,
         todayCollected: u.todayCollected || 0,
         attendanceStatus: (u.attendanceStatus || "PRESENT") as any,
       },
@@ -62,7 +51,6 @@ async function main() {
         assignedAgentId: r.assignedAgentId,
         collectionFrequency: r.collectionFrequency,
         totalCustomers: r.totalCustomers,
-        todayTarget: r.todayTarget,
         todayCollected: r.todayCollected,
         status: r.status,
       },

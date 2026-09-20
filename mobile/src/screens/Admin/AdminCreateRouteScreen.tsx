@@ -18,7 +18,6 @@ import {
   MapPin,
   Check,
   ShieldCheck,
-  Target,
   Layers,
   Calendar,
   Sparkles,
@@ -31,7 +30,6 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
   const [areaName, setAreaName] = useState('Rajahmundry Urban');
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [collectionFrequency, setCollectionFrequency] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
-  const [dailyTarget, setDailyTarget] = useState('25000');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -79,7 +77,6 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
         assignedAgentName: assignedAgent?.name || 'Assigned Officer',
         collectionDay: collectionFrequency === 'WEEKLY' ? 'Tuesday' : collectionFrequency,
         totalCustomers: 0,
-        todayTarget: Number(dailyTarget) || 25000,
         todayCollected: 0,
       };
 
@@ -196,9 +193,14 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
                     onPress={() => setSelectedAgentId(agent.userId || agent.id)}
                   >
                     <View style={styles.agentInfo}>
-                      <Text style={[styles.agentName, isSelected && styles.agentNameSelected]}>
-                        {agent.name}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.agentName, isSelected && styles.agentNameSelected]}>
+                          {agent.name}
+                        </Text>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: agent.role === 'ADMIN' ? Colors.warning : Colors.primaryLight }}>
+                          • {agent.role === 'ADMIN' ? 'Admin Officer' : 'Field Officer'}
+                        </Text>
+                      </View>
                       <Text style={styles.agentMeta}>
                         ID: {agent.userId || 'USR'} • {agent.phone || 'Field Officer'}
                       </Text>
@@ -213,11 +215,11 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
           )}
         </View>
 
-        {/* Collection Schedule & Target */}
+        {/* Collection Schedule */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Target size={18} color={Colors.warning} />
-            <Text style={styles.cardTitle}>Collection Schedule & Target</Text>
+            <Calendar size={18} color={Colors.warning} />
+            <Text style={styles.cardTitle}>Collection Schedule</Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -244,18 +246,6 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Daily Recovery Target (₹)</Text>
-            <TextInput
-              style={styles.input}
-              value={dailyTarget}
-              onChangeText={setDailyTarget}
-              keyboardType="numeric"
-              placeholder="25000"
-              placeholderTextColor={Colors.textMuted}
-            />
           </View>
         </View>
 

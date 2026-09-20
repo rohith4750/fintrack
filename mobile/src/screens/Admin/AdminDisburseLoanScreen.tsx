@@ -134,7 +134,7 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
         agentName: agentObj.name || 'Ramesh Varma',
         disbursementDate: new Date().toISOString().split('T')[0],
         startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        remarks: remarks.trim() || `${loanType} finance disbursed at branch counter`,
+        remarks: remarks.trim() || `${loanType} finance disbursed at office counter`,
       };
 
       await ApiService.disburseLoan(loanPayload);
@@ -164,29 +164,25 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
     <View style={styles.container}>
       <HeaderBar
         title="Disburse New Loan"
-        subtitle="Loan Creation & EMI Calculator"
+        subtitle="Customer Loan Scheme Onboarding"
         showBack
         onBack={() => navigation.goBack()}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Customer / Borrower Selector */}
+        {/* Customer Selector Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Select Borrower / Customer *</Text>
-          <Text style={styles.cardSubtitle}>Choose loan recipient from KYC database:</Text>
-          
+          <Text style={styles.cardTitle}>Borrower Customer *</Text>
           <TextInput
             style={[styles.input, { marginBottom: 10 }]}
+            placeholder="Search borrower by name or phone..."
+            placeholderTextColor={Colors.textMuted}
             value={customerSearch}
             onChangeText={setCustomerSearch}
-            placeholder="Search borrower by name, code, or phone..."
-            placeholderTextColor={Colors.textMuted}
           />
 
-          {customers.length === 0 ? (
-            <Text style={{ color: Colors.textMuted, fontSize: 13, paddingVertical: 8 }}>
-              No borrowers found in database. Please onboard a customer first.
-            </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color={Colors.primaryLight} style={{ marginVertical: 12 }} />
           ) : (
             <ScrollView style={{ maxHeight: 180 }} nestedScrollEnabled>
               <View style={styles.customerListGrid}>
@@ -229,13 +225,14 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
           )}
         </View>
 
-        {/* Assigned Field Agent / Admin Selector */}
+        {/* Assigned Recovery Officer / Agent / Admin Selector */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Assigned Recovery Officer / Agent *</Text>
-          <Text style={styles.cardSubtitle}>Select field agent or admin responsible for EMI collection on this loan:</Text>
+          <Text style={styles.cardTitle}>Assigned Recovery Officer (Admin / Agent) *</Text>
+          <Text style={styles.cardSubtitle}>Select field agent or admin officer responsible for EMI collection on this loan:</Text>
           <View style={styles.agentGrid}>
             {agents.map((ag) => {
               const isSelected = selectedAgentId === ag.id || selectedAgentId === ag.userId;
+              const isAdmin = ag.role === 'ADMIN';
               return (
                 <TouchableOpacity
                   key={ag.id || ag.userId}
@@ -243,16 +240,23 @@ export const AdminDisburseLoanScreen: React.FC<{ navigation: any }> = ({ navigat
                   style={[styles.agentSelectCard, isSelected && styles.agentSelectCardActive]}
                 >
                   <View style={styles.agentSelectHeader}>
-                    <View style={[styles.agentAvatar, isSelected && styles.agentAvatarActive]}>
-                      <Text style={[styles.agentAvatarText, isSelected && styles.agentAvatarTextActive]}>
+                    <View style={[styles.agentAvatar, isSelected && styles.agentAvatarActive, isAdmin && { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                      <Text style={[styles.agentAvatarText, isSelected && styles.agentAvatarTextActive, isAdmin && { color: Colors.warning }]}>
                         {ag.name ? ag.name.slice(0, 2).toUpperCase() : 'AG'}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.agentNameText, isSelected && styles.agentNameTextActive]}>
-                        {ag.name} ({ag.role})
-                      </Text>
-                      <Text style={styles.agentPhoneText}>{ag.phone || ag.loginId}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.agentNameText, isSelected && styles.agentNameTextActive]}>
+                          {ag.name}
+                        </Text>
+                        <View style={[styles.roleTag, isAdmin ? styles.adminTag : styles.agentTag]}>
+                          <Text style={[styles.roleTagText, isAdmin ? styles.adminTagText : styles.agentTagText]}>
+                            {isAdmin ? 'ADMIN' : 'AGENT'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={styles.agentPhoneText}>{ag.phone || ag.loginId || ag.userId}</Text>
                     </View>
                     {isSelected && (
                       <View style={styles.selectedCheckCircle}>
@@ -524,6 +528,31 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textMuted,
     marginTop: 1,
+  },
+  roleTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+  },
+  adminTag: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  agentTag: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  roleTagText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  adminTagText: {
+    color: Colors.warning,
+  },
+  agentTagText: {
+    color: Colors.primaryLight,
   },
   selectedCheckCircle: {
     width: 20,

@@ -37,7 +37,7 @@ export const AttendanceScreen: React.FC = () => {
         gpsLocation: {
           latitude: 17.0005,
           longitude: 81.804,
-          address: 'Main Road Branch, Rajahmundry',
+          address: 'Main Road Hub, Rajahmundry',
         },
       });
 
@@ -108,7 +108,7 @@ export const AttendanceScreen: React.FC = () => {
             keyboardType="numeric"
           />
           <Text style={styles.inputHelp}>
-            Enter the exact speedometer reading before departing from branch
+            Enter the exact speedometer reading before departing for field beat
           </Text>
         </View>
 

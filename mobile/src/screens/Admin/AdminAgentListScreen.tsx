@@ -199,11 +199,6 @@ export const AdminAgentListScreen: React.FC<{ navigation: any }> = ({ navigation
           const agentRoutes = routes.filter((r) =>
             agent.assignedRouteIds?.includes(r.id) || (r.routeId && agent.assignedRouteIds?.includes(r.routeId)) || r.assignedAgentId === agent.id || (agent.userId && r.assignedAgentId === agent.userId)
           );
-          const percent = Math.min(
-            100,
-            Math.round(((agent.todayCollected || 0) / (agent.todayTarget || 1)) * 100)
-          );
-
           return (
             <View
               key={agent.id}
@@ -271,32 +266,16 @@ export const AdminAgentListScreen: React.FC<{ navigation: any }> = ({ navigation
                   </Text>
                 </View>
                 <View style={styles.statCol}>
-                  <Text style={styles.statLabel}>Today Target</Text>
+                  <Text style={styles.statLabel}>Cash Limit</Text>
                   <Text style={styles.statVal}>
-                    ₹{(agent.todayTarget || 0).toLocaleString('en-IN')}
+                    ₹{(agent.maxDailyCashLimit || 75000).toLocaleString('en-IN')}
                   </Text>
                 </View>
                 <View style={styles.statCol}>
-                  <Text style={styles.statLabel}>Collected</Text>
+                  <Text style={styles.statLabel}>Collected Today</Text>
                   <Text style={[styles.statVal, { color: Colors.primaryLight }]}>
                     ₹{(agent.todayCollected || 0).toLocaleString('en-IN')}
                   </Text>
-                </View>
-              </View>
-
-              {/* Beat Progress */}
-              <View style={styles.progressSection}>
-                <View style={styles.progressLabelRow}>
-                  <Text style={styles.progressLabel}>Beat Target Progress</Text>
-                  <Text style={styles.progressPercent}>{percent}%</Text>
-                </View>
-                <View style={styles.progressBg}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      { width: `${Math.min(100, Math.max(4, percent))}%` },
-                    ]}
-                  />
                 </View>
               </View>
 

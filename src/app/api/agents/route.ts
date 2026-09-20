@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const onlyAgents = searchParams.get("onlyAgents") === "true";
+
     const agents = await prisma.user.findMany({
-      where: { role: "AGENT" },
+      where: onlyAgents ? { role: "AGENT" } : { role: { in: ["AGENT", "ADMIN"] } },
       include: {
         routes: true,
         attendanceRecords: {
@@ -12,7 +15,10 @@ export async function GET() {
           orderBy: { createdAt: "desc" },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { role: "asc" },
+        { createdAt: "desc" },
+      ],
     });
 
     const mappedAgents = agents.map((a: any) => ({
@@ -23,21 +29,20 @@ export async function GET() {
       phone: a.phone,
       role: a.role,
       status: a.status,
-      loginId: a.loginId || `AGT-${a.userId?.replace('USR-', '')}`,
+      loginId: a.loginId || (a.role === "ADMIN" ? "ADMIN" : `AGT-${a.userId?.replace('USR-', '')}`),
       pin: a.pin || "1234",
       password: a.password || "agentpassword",
       recoveryEfficiency: Number(a.recoveryEfficiency) || 94.0,
-      todayTarget: Number(a.todayTarget) || 30000,
       todayCollected: Number(a.todayCollected) || 0,
       attendanceStatus: a.attendanceStatus || "ON_FIELD",
-      maxDailyCashLimit: Number(a.maxDailyCashLimit) || 75000,
+      maxDailyCashLimit: Number(a.maxDailyCashLimit) || (a.role === "ADMIN" ? 500000 : 75000),
       assignedRouteIds: a.assignedRouteIds || a.routes?.map((r: any) => r.routeId) || [],
       permissions: {
-        canCollectCash: a.canCollectCash ?? true,
-        canCollectUPI: a.canCollectUPI ?? true,
-        canEditCustomer: a.canEditCustomer ?? false,
-        canDisburseLoan: a.canDisburseLoan ?? false,
-        maxDailyCashLimit: Number(a.maxDailyCashLimit) || 75000,
+        canCollectCash: a.role === "ADMIN" ? true : (a.canCollectCash ?? true),
+        canCollectUPI: a.role === "ADMIN" ? true : (a.canCollectUPI ?? true),
+        canEditCustomer: a.role === "ADMIN" ? true : (a.canEditCustomer ?? false),
+        canDisburseLoan: a.role === "ADMIN" ? true : (a.canDisburseLoan ?? false),
+        maxDailyCashLimit: Number(a.maxDailyCashLimit) || (a.role === "ADMIN" ? 500000 : 75000),
       },
       routes: a.routes,
     }));
@@ -96,7 +101,6 @@ export async function POST(req: Request) {
         pin: body.pin || "1234",
         password: body.password || "agentpassword",
         recoveryEfficiency: Number(body.recoveryEfficiency) || 92.5,
-        todayTarget: Number(body.todayTarget) || 30000,
         todayCollected: 0,
         maxDailyCashLimit: Number(body.maxDailyCashLimit || permissions.maxDailyCashLimit) || 75000,
         assignedRouteIds: Array.isArray(body.assignedRouteIds) ? body.assignedRouteIds : [],
@@ -134,7 +138,6 @@ export async function PUT(req: Request) {
           ...(body.pin ? { pin: body.pin } : {}),
           ...(body.password ? { password: body.password } : {}),
           ...(body.loginId ? { loginId: body.loginId } : {}),
-          ...(body.todayTarget !== undefined ? { todayTarget: Number(body.todayTarget) } : {}),
           ...(body.maxDailyCashLimit !== undefined ? { maxDailyCashLimit: Number(body.maxDailyCashLimit) } : {}),
           ...(Array.isArray(body.assignedRouteIds) ? { assignedRouteIds: body.assignedRouteIds } : {}),
           ...(permissions?.canCollectCash !== undefined ? { canCollectCash: permissions.canCollectCash } : {}),

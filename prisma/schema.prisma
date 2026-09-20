@@ -68,7 +68,6 @@ model User {
   pin                String?           @default("1234")
   password           String?
   recoveryEfficiency Float?            @default(90.0)
-  todayTarget        Float?            @default(0)
   todayCollected     Float?            @default(0)
   maxDailyCashLimit  Float?            @default(75000)
   assignedRouteIds   String[]          @default([])
@@ -86,18 +85,6 @@ model User {
   attendanceRecords  AgentAttendance[]
 }
 
-model Branch {
-  id        String   @id @default(cuid())
-  branchId  String   @unique // e.g. "BR-01"
-  code      String   @unique // e.g. "BR-RJY"
-  name      String
-  city      String
-  state     String
-  phone     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Route {
   id                  String   @id @default(cuid())
   routeId             String   @unique // e.g. "RT-01"
@@ -106,7 +93,6 @@ model Route {
   areaName            String   @default("Rajahmundry Urban")
   collectionFrequency String   @default("WEEKLY") // DAILY, WEEKLY, MONTHLY
   totalCustomers      Int      @default(0)
-  todayTarget         Float    @default(0)
   todayCollected      Float    @default(0)
   status              String   @default("ACTIVE")
   createdAt           DateTime @default(now())

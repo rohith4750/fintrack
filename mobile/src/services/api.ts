@@ -360,7 +360,6 @@ export const ApiService = {
           assignedAgentName: r.assignedAgent?.name || 'Suresh Varma',
           collectionDay: r.collectionFrequency || 'Tuesday',
           totalCustomers: r.customers?.length || r.totalCustomers || 0,
-          todayTarget: Number(r.todayTarget) || 25000,
           todayCollected: Number(r.todayCollected) || 0,
         }));
         await AsyncStorage.setItem(STORAGE_KEYS.CACHED_ROUTES, JSON.stringify(mapped));
@@ -396,7 +395,6 @@ export const ApiService = {
         code: routeData.code,
         areaName: routeData.areaName || 'Rajahmundry Urban',
         assignedAgentId: routeData.assignedAgentId,
-        todayTarget: routeData.todayTarget,
       });
       if (res.data?.success && res.data.route) {
         const r = res.data.route;
@@ -411,7 +409,6 @@ export const ApiService = {
           assignedAgentName: r.assignedAgent?.name || routeData.assignedAgentName || 'Assigned Officer',
           collectionDay: r.collectionFrequency || 'Tuesday',
           totalCustomers: 0,
-          todayTarget: Number(r.todayTarget) || 25000,
           todayCollected: 0,
         };
         const existing = await ApiService.getRoutes();

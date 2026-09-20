@@ -61,7 +61,7 @@ export const CashHandoverScreen: React.FC<{ navigation: any }> = ({ navigation }
         totalCashAmount: todayCashCollected,
         totalUpiAmount: 0,
         denominations,
-        handedOverTo: 'Branch Cashier (Rajahmundry Main)',
+        handedOverTo: 'FinTrack Central Vault (Admin)',
         status: 'SUBMITTED',
         managerRemarks: 'Verified full cash bundle without shortages',
       });
@@ -84,15 +84,15 @@ export const CashHandoverScreen: React.FC<{ navigation: any }> = ({ navigation }
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Branch Handover Info */}
+        {/* Central Vault Handover Info */}
         <View style={styles.branchCard}>
           <View style={styles.branchIconWrapper}>
             <Building2 size={20} color={Colors.primaryLight} />
           </View>
           <View style={styles.branchInfo}>
-            <Text style={styles.branchName}>Rajahmundry Urban Regional Branch</Text>
+            <Text style={styles.branchName}>FinTrack Central Cash Vault</Text>
             <Text style={styles.branchSub}>
-              Branch Vault Code: BR-RJY-01 • Cashier Counter #1
+              Vault Deposit Code: VLT-CENTRAL • Main Cashier Counter
             </Text>
           </View>
         </View>
@@ -123,7 +123,7 @@ export const CashHandoverScreen: React.FC<{ navigation: any }> = ({ navigation }
             </View>
             <View style={styles.voucherRow}>
               <Text style={styles.vLabel}>Handed Over To:</Text>
-              <Text style={styles.vVal}>Branch Cashier (Rajahmundry)</Text>
+              <Text style={styles.vVal}>FinTrack Central Vault (Admin)</Text>
             </View>
 
             <TouchableOpacity

@@ -16,7 +16,7 @@ import { Typography } from '../../theme/typography';
 import { HeaderBar } from '../../components/HeaderBar';
 import { ApiService } from '../../services/api';
 import { Route } from '../../types';
-import { MapPin, Plus, User, Target, Trash2, Edit3, Check, X } from 'lucide-react-native';
+import { MapPin, Plus, User, Trash2, Edit3, Check, X } from 'lucide-react-native';
 
 export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -30,7 +30,6 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
   const [routeCode, setRouteCode] = useState('');
   const [areaName, setAreaName] = useState('Rajahmundry Urban');
   const [agentName, setAgentName] = useState('Suresh Varma');
-  const [dailyTarget, setDailyTarget] = useState('25000');
 
   const loadRoutes = useCallback(async () => {
     try {
@@ -61,7 +60,6 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
     setRouteCode(r.code);
     setAreaName(r.areaName || 'Rajahmundry Urban');
     setAgentName(r.assignedAgentName);
-    setDailyTarget(String(r.todayTarget));
   };
 
   const handleSaveEdit = async () => {
@@ -79,7 +77,6 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
               code: routeCode.trim().toUpperCase(),
               areaName: areaName.trim() || 'Rajahmundry Urban',
               assignedAgentName: agentName,
-              todayTarget: Number(dailyTarget) || r.todayTarget,
             }
           : r
       )
@@ -91,7 +88,6 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
         code: routeCode.trim().toUpperCase(),
         areaName: areaName.trim() || 'Rajahmundry Urban',
         assignedAgentName: agentName,
-        todayTarget: Number(dailyTarget),
       });
     }
 
@@ -211,18 +207,6 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Daily Target (₹)</Text>
-              <TextInput
-                style={styles.input}
-                value={dailyTarget}
-                onChangeText={setDailyTarget}
-                keyboardType="numeric"
-                placeholder="25000"
-                placeholderTextColor={Colors.textMuted}
-              />
-            </View>
-
             <View style={styles.formBtnRow}>
               <TouchableOpacity
                 onPress={() => {
@@ -293,9 +277,9 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
               </View>
 
               <View style={styles.metaItem}>
-                <Text style={styles.metaLabel}>Daily Target</Text>
-                <Text style={[styles.metaVal, { color: Colors.primaryLight }]}>
-                  ₹{(r.todayTarget || 0).toLocaleString('en-IN')}
+                <Text style={styles.metaLabel}>Collected Today</Text>
+                <Text style={[styles.metaVal, { color: Colors.success }]}>
+                  ₹{(r.todayCollected || 0).toLocaleString('en-IN')}
                 </Text>
               </View>
 

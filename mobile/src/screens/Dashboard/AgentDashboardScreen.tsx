@@ -72,8 +72,7 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
 
   // Compute real stats from actual data — no mock/hardcoded values
   const todayCollected = collections.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-  const todayTarget = routes.reduce((sum, r) => sum + (r.todayTarget || 0), 0) || loans.reduce((sum, l) => sum + (l.installmentAmount || 0), 0);
-  const targetPercent = todayTarget > 0 ? Math.min(100, Math.round((todayCollected / todayTarget) * 100)) : 0;
+  const todayCount = collections.length;
 
   const cashLimit = user?.maxDailyCashLimit || 100000;
   const cashInHand = collections.filter((c) => c.paymentMethod === 'CASH').reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
@@ -128,12 +127,11 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
         </View>
 
         <KpiCard
-          label="Today's Collection vs Target"
+          label="Today's Field Collections"
           value={`₹${todayCollected.toLocaleString('en-IN')}`}
-          subValue={`Target: ₹${todayTarget.toLocaleString('en-IN')} (${targetPercent}% Achieved)`}
+          subValue={`${todayCount} successful collection transactions recorded`}
           icon={<IndianRupee size={20} color={Colors.primaryLight} />}
           variant="primary"
-          progress={targetPercent}
         />
 
         <KpiCard
@@ -172,7 +170,6 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
         </View>
 
         {routes.map((rt) => {
-          const routeProgress = Math.round((rt.todayCollected / (rt.todayTarget || 1)) * 100);
           return (
             <TouchableOpacity
               key={rt.id}
@@ -189,13 +186,9 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
 
               <View style={styles.routeStatsRow}>
                 <Text style={styles.routeStatsText}>
-                  Collected: <Text style={styles.boldText}>₹{rt.todayCollected.toLocaleString('en-IN')}</Text> / ₹{rt.todayTarget.toLocaleString('en-IN')}
+                  Collected Today: <Text style={styles.boldText}>₹{(rt.todayCollected || 0).toLocaleString('en-IN')}</Text>
                 </Text>
-                <Text style={styles.routePercentText}>{routeProgress}%</Text>
-              </View>
-
-              <View style={styles.routeProgressBg}>
-                <View style={[styles.routeProgressFill, { width: `${Math.min(100, routeProgress)}%` }]} />
+                <Text style={styles.routePercentText}>{rt.totalCustomers || 0} Borrowers</Text>
               </View>
 
               <View style={styles.routeFooter}>

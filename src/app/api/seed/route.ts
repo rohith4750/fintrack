@@ -17,15 +17,6 @@ import {
 
 export async function POST() {
   try {
-    // 1. Seed Branches
-    for (const b of initialBranches) {
-      await prisma.branch.upsert({
-        where: { branchId: b.id },
-        update: { name: b.name, city: b.city, state: b.state, phone: b.phone },
-        create: { branchId: b.id, code: b.code, name: b.name, city: b.city, state: b.state, phone: b.phone },
-      });
-    }
-
     // 2. Seed Users / Agents
     for (const u of initialUsers) {
       await prisma.user.upsert({
@@ -38,7 +29,6 @@ export async function POST() {
           pin: u.pin || "1234",
           loginId: u.loginId,
           recoveryEfficiency: u.recoveryEfficiency || 90,
-          todayTarget: u.todayTarget || 0,
           todayCollected: u.todayCollected || 0,
           attendanceStatus: (u.attendanceStatus || "PRESENT") as any,
           maxDailyCashLimit: u.permissions?.maxDailyCashLimit || 75000,
@@ -57,7 +47,6 @@ export async function POST() {
           pin: u.pin || "1234",
           loginId: u.loginId,
           recoveryEfficiency: u.recoveryEfficiency || 90,
-          todayTarget: u.todayTarget || 0,
           todayCollected: u.todayCollected || 0,
           attendanceStatus: (u.attendanceStatus || "PRESENT") as any,
           maxDailyCashLimit: u.permissions?.maxDailyCashLimit || 75000,
@@ -79,7 +68,6 @@ export async function POST() {
           assignedAgentId: r.assignedAgentId,
           collectionFrequency: r.collectionFrequency,
           totalCustomers: r.totalCustomers,
-          todayTarget: r.todayTarget,
           todayCollected: r.todayCollected,
           status: r.status,
         },
@@ -91,7 +79,6 @@ export async function POST() {
           assignedAgentId: r.assignedAgentId,
           collectionFrequency: r.collectionFrequency,
           totalCustomers: r.totalCustomers,
-          todayTarget: r.todayTarget,
           todayCollected: r.todayCollected,
           status: r.status,
         },

@@ -28,6 +28,8 @@ import {
   ShieldCheck,
   Building,
   Banknote,
+  Sparkles,
+  IndianRupee,
 } from 'lucide-react-native';
 
 export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -81,16 +83,22 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
     } catch (e) {}
   };
 
-  // Admin Financial Calculations
-  const totalDisbursed = loans.reduce((sum, l) => sum + l.principalAmount, 0);
-  const totalRepayable = loans.reduce((sum, l) => sum + l.totalRepayableAmount, 0);
-  const totalCollected = loans.reduce((sum, l) => sum + l.totalPaidAmount, 0);
-  const totalOutstanding = loans.reduce((sum, l) => sum + l.outstandingBalance, 0);
+  // Deep Financial Statistics
+  const totalDisbursed = loans.reduce((sum, l) => sum + (Number(l.principalAmount) || 0), 0);
+  const totalRepayable = loans.reduce((sum, l) => sum + (Number(l.totalRepayableAmount) || 0), 0);
+  const totalCollected = loans.reduce((sum, l) => sum + (Number(l.totalPaidAmount) || 0), 0);
+  const totalOutstanding = loans.reduce((sum, l) => sum + (Number(l.outstandingBalance) || 0), 0);
   const grossProfitMargin = totalRepayable - totalDisbursed;
-  const overdueCount = loans.filter((l) => l.status === 'OVERDUE' || l.status === 'DEFAULTED').length;
+  const roiYield = totalDisbursed > 0 ? ((grossProfitMargin / totalDisbursed) * 100).toFixed(1) : '0';
+  const recoveryProgress = totalRepayable > 0 ? Math.round((totalCollected / totalRepayable) * 100) : 0;
+
+  const overdueLoans = loans.filter((l) => l.status === 'OVERDUE' || l.status === 'DEFAULTED');
+  const overdueCount = overdueLoans.length;
+  const overdueCapitalAtRisk = overdueLoans.reduce((sum, l) => sum + (Number(l.outstandingBalance) || 0), 0);
 
   const todayCashTotal = handovers.reduce((sum, h) => sum + (Number(h.totalCashAmount) || 0), 0);
   const todayUpiTotal = collections.filter(c => c.paymentMethod === 'UPI').reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const todayTotalCollected = collections.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
 
   return (
     <View style={styles.container}>
@@ -144,38 +152,76 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
           </View>
         </View>
 
-        {/* Company Financial Metrics (Admin Only) */}
+        {/* Executive Portfolio Investment & Returns Analysis */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Company Financial Overview</Text>
+          <Text style={styles.sectionTitle}>Portfolio Financial Analysis</Text>
           <View style={styles.adminPill}>
             <ShieldCheck size={12} color={Colors.success} />
-            <Text style={styles.adminPillText}>Admin P&L Access</Text>
+            <Text style={styles.adminPillText}>Executive P&L</Text>
           </View>
         </View>
 
-        <KpiCard
-          label="Total Active Portfolio"
-          value={`₹${totalDisbursed.toLocaleString('en-IN')}`}
-          subValue={`Total Repayable: ₹${totalRepayable.toLocaleString('en-IN')}`}
-          icon={<WalletCards size={20} color={Colors.primaryLight} />}
-          variant="primary"
-        />
+        {/* Executive P&L Hero Card */}
+        <View style={styles.heroProfitCard}>
+          <View style={styles.heroProfitTop}>
+            <View>
+              <Text style={styles.heroProfitOverline}>PROJECTED NET PROFIT</Text>
+              <Text style={styles.heroProfitValue}>+₹{grossProfitMargin.toLocaleString('en-IN')}</Text>
+            </View>
+            <View style={styles.roiBadge}>
+              <TrendingUp size={14} color="#10B981" />
+              <Text style={styles.roiBadgeText}>+{roiYield}% ROI</Text>
+            </View>
+          </View>
 
+          <View style={styles.heroMetricsGrid}>
+            <View style={styles.heroMetricItem}>
+              <Text style={styles.heroMetricLabel}>Capital Invested</Text>
+              <Text style={styles.heroMetricVal}>₹{totalDisbursed.toLocaleString('en-IN')}</Text>
+              <Text style={styles.heroMetricSub}>{loans.length} Loans Disbursed</Text>
+            </View>
+
+            <View style={styles.heroMetricDivider} />
+
+            <View style={styles.heroMetricItem}>
+              <Text style={styles.heroMetricLabel}>Expected Returns</Text>
+              <Text style={[styles.heroMetricVal, { color: Colors.warning }]}>
+                ₹{totalRepayable.toLocaleString('en-IN')}
+              </Text>
+              <Text style={styles.heroMetricSub}>Principal + Interest</Text>
+            </View>
+          </View>
+
+          {/* Recovery Progress Bar */}
+          <View style={styles.heroRecoveryBox}>
+            <View style={styles.heroRecoveryHeader}>
+              <Text style={styles.heroRecoveryLabel}>Capital Recovered Till Date</Text>
+              <Text style={styles.heroRecoveryPercent}>
+                ₹{totalCollected.toLocaleString('en-IN')} ({recoveryProgress}%)
+              </Text>
+            </View>
+            <View style={styles.heroRecoveryTrack}>
+              <View style={[styles.heroRecoveryBar, { width: `${Math.min(100, Math.max(2, recoveryProgress))}%` }]} />
+            </View>
+          </View>
+        </View>
+
+        {/* Key Financial Stat Cards */}
         <View style={styles.kpiRow}>
           <View style={{ flex: 1, marginRight: 6 }}>
             <KpiCard
-              label="Total Collected"
-              value={`₹${totalCollected.toLocaleString('en-IN')}`}
-              subValue="Recovered till date"
-              icon={<TrendingUp size={18} color={Colors.success} />}
-              variant="success"
+              label="Capital Invested"
+              value={`₹${totalDisbursed.toLocaleString('en-IN')}`}
+              subValue="Principal Outflow"
+              icon={<WalletCards size={18} color={Colors.primaryLight} />}
+              variant="primary"
             />
           </View>
           <View style={{ flex: 1, marginLeft: 6 }}>
             <KpiCard
-              label="Net Profit Margin"
-              value={`₹${grossProfitMargin.toLocaleString('en-IN')}`}
-              subValue="Interest Profit"
+              label="Expected Returns"
+              value={`₹${totalRepayable.toLocaleString('en-IN')}`}
+              subValue="Gross Contracted Value"
               icon={<TrendingUp size={18} color={Colors.warning} />}
               variant="warning"
             />
@@ -185,23 +231,54 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
         <View style={styles.kpiRow}>
           <View style={{ flex: 1, marginRight: 6 }}>
             <KpiCard
-              label="Total Outstanding"
+              label="Net Interest Profit"
+              value={`₹${grossProfitMargin.toLocaleString('en-IN')}`}
+              subValue={`+${roiYield}% Yield Margin`}
+              icon={<Sparkles size={18} color={Colors.success} />}
+              variant="success"
+            />
+          </View>
+          <View style={{ flex: 1, marginLeft: 6 }}>
+            <KpiCard
+              label="Recovered Capital"
+              value={`₹${totalCollected.toLocaleString('en-IN')}`}
+              subValue={`${recoveryProgress}% Total Repaid`}
+              icon={<ShieldCheck size={18} color={Colors.success} />}
+              variant="success"
+              progress={recoveryProgress}
+            />
+          </View>
+        </View>
+
+        <View style={styles.kpiRow}>
+          <View style={{ flex: 1, marginRight: 6 }}>
+            <KpiCard
+              label="Market Outstanding"
               value={`₹${totalOutstanding.toLocaleString('en-IN')}`}
-              subValue={`${loans.length} Active Loans`}
+              subValue="Active in Market"
               icon={<Building size={18} color={Colors.primaryLight} />}
               variant="primary"
             />
           </View>
           <View style={{ flex: 1, marginLeft: 6 }}>
             <KpiCard
-              label="Overdue Watchlist"
-              value={`${overdueCount} Accounts`}
-              subValue="Immediate follow-up"
+              label="At-Risk / Overdue"
+              value={`₹${overdueCapitalAtRisk.toLocaleString('en-IN')}`}
+              subValue={`${overdueCount} Accounts Overdue`}
               icon={<AlertTriangle size={18} color={Colors.danger} />}
               variant="danger"
             />
           </View>
         </View>
+
+        {/* Live Today's Inflow */}
+        <KpiCard
+          label="Today's Total Field Collections"
+          value={`₹${todayTotalCollected.toLocaleString('en-IN')}`}
+          subValue={`Cash: ₹${todayCashTotal.toLocaleString('en-IN')} • UPI: ₹${todayUpiTotal.toLocaleString('en-IN')} (${collections.length} receipts)`}
+          icon={<Banknote size={20} color={Colors.success} />}
+          variant="success"
+        />
 
         {/* Live Field Cash Handovers & Denominations Section */}
         <View style={styles.sectionHeader}>
@@ -357,7 +434,7 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
           </View>
           <View style={styles.menuContent}>
             <Text style={styles.menuTitle}>Office Expenses & Accounts</Text>
-            <Text style={styles.menuSub}>Track Branch Expenses & Vouchers</Text>
+            <Text style={styles.menuSub}>Track Operational Expenses & Vouchers</Text>
           </View>
           <ChevronRight size={18} color={Colors.textSecondary} />
         </TouchableOpacity>
@@ -592,5 +669,117 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 12,
     fontWeight: '700',
+  },
+  heroProfitCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  heroProfitTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+  },
+  heroProfitOverline: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#10B981',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  heroProfitValue: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#F8FAFC',
+    marginTop: 2,
+    letterSpacing: -0.5,
+  },
+  roiBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  roiBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#10B981',
+  },
+  heroMetricsGrid: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  heroMetricItem: {
+    flex: 1,
+  },
+  heroMetricLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  heroMetricVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  heroMetricSub: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  heroMetricDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginHorizontal: 12,
+  },
+  heroRecoveryBox: {
+    marginTop: 2,
+  },
+  heroRecoveryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  heroRecoveryLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  heroRecoveryPercent: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#10B981',
+  },
+  heroRecoveryTrack: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  heroRecoveryBar: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 3,
   },
 });

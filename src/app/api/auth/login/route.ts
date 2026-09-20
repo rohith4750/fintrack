@@ -50,7 +50,6 @@ export async function POST(req: Request) {
       pin: user.pin || pin,
       password: user.password || "agentpassword",
       recoveryEfficiency: Number(user.recoveryEfficiency) || 94.0,
-      todayTarget: Number(user.todayTarget) || 30000,
       todayCollected: Number(user.todayCollected) || 0,
       attendanceStatus: user.attendanceStatus || "ON_FIELD",
       maxDailyCashLimit: Number(user.maxDailyCashLimit) || 75000,

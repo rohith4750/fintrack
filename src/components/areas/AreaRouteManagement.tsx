@@ -217,7 +217,7 @@ export const AreaRouteManagement: React.FC<AreaRouteManagementProps> = ({
                         {route.totalCustomers}
                       </td>
                       <td className="text-slate-600 font-medium">
-                        {formatINR(route.todayTarget)}
+                        {formatINR(route.todayTarget || 0)}
                       </td>
                       <td className="font-bold text-emerald-700">
                         {formatINR(route.todayCollected)}
