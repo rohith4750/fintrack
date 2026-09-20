@@ -32,7 +32,7 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
   navigation,
 }) => {
   const { user, updateUserStats } = useAuth();
-  const { loanId, customerId } = route.params || {};
+  const { loanId, customerId, loan: passedLoan } = route.params || {};
 
   const [loan, setLoan] = useState<Loan | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -44,7 +44,7 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
 
   useEffect(() => {
     loadLoanDetails();
-  }, [loanId, customerId]);
+  }, [loanId, customerId, passedLoan]);
 
   const loadLoanDetails = async () => {
     try {
@@ -53,7 +53,8 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
         ApiService.getCustomers(),
       ]);
 
-      let foundLoan = allLoans.find((l) => l.id === loanId || l.loanNumber === loanId);
+      const effectiveId = loanId || passedLoan?.id || passedLoan?.loanNumber;
+      let foundLoan = passedLoan || allLoans.find((l) => l.id === effectiveId || l.loanNumber === effectiveId);
       if (!foundLoan && customerId) {
         foundLoan = allLoans.find((l) => l.customerId === customerId || l.customerCode === customerId);
       }

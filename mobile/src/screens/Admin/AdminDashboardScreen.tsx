@@ -113,7 +113,7 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryLight} />
         }
       >
-        {/* Quick Create Action Grid (2x2) */}
+        {/* Quick Action Grid */}
         <View style={styles.actionGridContainer}>
           <View style={styles.actionGridRow}>
             <TouchableOpacity
@@ -125,21 +125,21 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigation.navigate('AdminCreateCustomer')}
-              style={[styles.actionBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder }]}
+              onPress={() => navigation.navigate('AdminLoans')}
+              style={[styles.actionBtn, { backgroundColor: '#10B981' }]}
             >
-              <Users size={16} color={Colors.primaryLight} />
-              <Text style={[styles.actionBtnText, { color: Colors.text }]}>Add Customer</Text>
+              <Banknote size={16} color="#FFF" />
+              <Text style={styles.actionBtnText}>Collect EMI</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.actionGridRow}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('AdminCreateAgent')}
-              style={[styles.actionBtn, { backgroundColor: 'rgba(59, 130, 246, 0.12)', borderWidth: 1, borderColor: Colors.primaryLight }]}
+              onPress={() => navigation.navigate('AdminCreateCustomer')}
+              style={[styles.actionBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder }]}
             >
-              <ShieldCheck size={16} color={Colors.primaryLight} />
-              <Text style={[styles.actionBtnText, { color: Colors.primaryLight }]}>Add Agent</Text>
+              <Users size={16} color={Colors.primaryLight} />
+              <Text style={[styles.actionBtnText, { color: Colors.text }]}>Add Customer</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

@@ -242,6 +242,7 @@ export const AdminLoanListScreen: React.FC<{ navigation: any }> = ({ navigation 
                 <TouchableOpacity
                   onPress={() =>
                     navigation.navigate('CollectPayment', {
+                      loanId: item.id || item.loanNumber,
                       loan: item,
                     })
                   }
