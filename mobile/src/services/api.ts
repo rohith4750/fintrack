@@ -73,21 +73,33 @@ apiClient.interceptors.response.use(
 
 export const ApiService = {
   // Agent / Admin PIN Authentication (Dynamic DB lookup)
-  login: async (pinOrId: string, pinPass?: string): Promise<{ success: boolean; user?: User; token?: string }> => {
+  login: async (pinOrId: string, pinPass?: string): Promise<{ success: boolean; user?: User; token?: string; message?: string }> => {
     const cleanPin = (pinOrId || pinPass || '').trim();
+    if (!cleanPin) {
+      return { success: false, message: 'Please enter a PIN' };
+    }
 
+    // 1. Online attempt against primary backend (e.g. Vercel)
     try {
-      const response = await apiClient.post('/auth/login', { userId: cleanPin, pin: cleanPin }, { timeout: 4000 });
+      const response = await apiClient.post('/auth/login', { userId: cleanPin, pin: cleanPin }, { timeout: 6000 });
       if (response.data?.success && response.data.user) {
         await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(response.data.user));
         await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token || 'fintrack-token');
         return response.data;
       }
+      if (response.data?.success === false) {
+        return { success: false, message: response.data?.message || 'Invalid PIN' };
+      }
     } catch (e: any) {
-      console.log('Online login failed, trying LAN fallback...', e?.message);
+      // If the backend server responded with 401/403/400, credentials were explicitly rejected by the DB!
+      // Do NOT fall back to offline or mock sessions.
+      if (e.response && (e.response.status === 401 || e.response.status === 403 || e.response.status === 400)) {
+        return { success: false, message: e.response.data?.message || 'Invalid PIN or credentials entered' };
+      }
+      console.log('Online login network attempt failed, trying LAN fallback...', e?.message);
     }
 
-    // LAN / Localhost fallback if reachable
+    // 2. LAN / Localhost fallback only on true network connection failure
     try {
       const lanResponse = await axios.post(`${LAN_API_BASE_URL}/auth/login`, { userId: cleanPin, pin: cleanPin }, { timeout: 2500 });
       if (lanResponse.data?.success && lanResponse.data.user) {
@@ -95,14 +107,24 @@ export const ApiService = {
         await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, lanResponse.data.token || 'fintrack-token');
         return lanResponse.data;
       }
-    } catch (e) {}
+      if (lanResponse.data?.success === false) {
+        return { success: false, message: lanResponse.data?.message || 'Invalid PIN' };
+      }
+    } catch (e: any) {
+      if (e.response && (e.response.status === 401 || e.response.status === 403 || e.response.status === 400)) {
+        return { success: false, message: e.response.data?.message || 'Invalid PIN or credentials entered' };
+      }
+    }
 
-    // Offline fallback strictly from cached database records
+    // 3. Offline fallback strictly from cached database records (only when offline)
     try {
       const cachedAgentsStr = await AsyncStorage.getItem(STORAGE_KEYS.CACHED_AGENTS);
       if (cachedAgentsStr) {
         const cachedAgents: User[] = JSON.parse(cachedAgentsStr);
-        const dynamicUser = cachedAgents.find((a) => a.pin === cleanPin || a.loginId === cleanPin || a.userId === cleanPin || a.phone === cleanPin);
+        const dynamicUser = cachedAgents.find(
+          (a) => (a.pin === cleanPin || a.loginId === cleanPin || a.userId === cleanPin || a.phone === cleanPin) &&
+                 (!a.status || a.status === 'ACTIVE')
+        );
         if (dynamicUser) {
           await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(dynamicUser));
           await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'offline-session-token');
@@ -111,36 +133,8 @@ export const ApiService = {
       }
     } catch (err) {}
 
-    // Instant Admin Security PIN fallback (PIN 1234)
-    if (cleanPin === '1234') {
-      const adminFallbackUser: User = {
-        id: 'cmu9h0gw60000h377cpl4j5u6',
-        userId: 'USR-01',
-        name: 'Admin',
-        email: 'admin@fintrack.com',
-        phone: '+91 98480 00001',
-        role: 'ADMIN',
-        status: 'ACTIVE',
-        loginId: 'admin',
-        pin: '1234',
-        recoveryEfficiency: 95.0,
-        todayCollected: 0,
-        attendanceStatus: 'PRESENT',
-        maxDailyCashLimit: 500000,
-        permissions: {
-          canCollectCash: true,
-          canCollectUPI: true,
-          canEditCustomer: true,
-          canDisburseLoan: true,
-          maxDailyCashLimit: 500000,
-        },
-      };
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(adminFallbackUser));
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'fintrack-admin-token');
-      return { success: true, user: adminFallbackUser, token: 'fintrack-admin-token' };
-    }
-
-    return { success: false };
+    // PIN is not authorized in DB
+    return { success: false, message: 'Invalid PIN or credentials entered' };
   },
 
   // Get Agents Roster (Live database with offline cache)

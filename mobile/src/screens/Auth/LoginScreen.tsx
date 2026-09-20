@@ -85,141 +85,141 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Top Brand Header */}
-      <View style={styles.header}>
-        <View style={styles.logoBadge}>
-          <Shield size={38} color={Colors.primaryLight} />
+      <View style={styles.content}>
+        {/* Top Brand Header */}
+        <View style={styles.header}>
+          <View style={styles.logoBadge}>
+            <Shield size={28} color={Colors.primaryLight} />
+          </View>
+          <Text style={styles.brandTitle}>FINTRACK</Text>
+          <Text style={styles.brandSubtitle}>Microfinance Regional Terminal</Text>
         </View>
-        <Text style={styles.brandTitle}>FINTRACK</Text>
-        <Text style={styles.brandSubtitle}>Microfinance Regional Terminal</Text>
-      </View>
 
-      {/* PIN Prompt Section */}
-      <View style={styles.promptContainer}>
-        <View style={styles.lockRow}>
-          <Lock size={16} color={Colors.textSecondary} />
-          <Text style={styles.promptTitle}>Enter 4-Digit Security PIN</Text>
+        {/* PIN Prompt Section */}
+        <View style={styles.promptContainer}>
+          <View style={styles.lockRow}>
+            <Lock size={15} color={Colors.textSecondary} />
+            <Text style={styles.promptTitle}>Enter 4-Digit Security PIN</Text>
+          </View>
+          <Text style={styles.promptDesc}>
+            Enter your assigned PIN to unlock your terminal
+          </Text>
+
+          {/* 4 Interactive PIN Dots with Shake Animation */}
+          <Animated.View
+            style={[
+              styles.pinDotsRow,
+              { transform: [{ translateX: shakeAnim }] },
+            ]}
+          >
+            {[0, 1, 2, 3].map((index) => {
+              const isFilled = pin.length > index;
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.pinDot,
+                    isFilled && styles.pinDotFilled,
+                    !!error && styles.pinDotError,
+                  ]}
+                />
+              );
+            })}
+          </Animated.View>
+
+          {error ? (
+            <View style={styles.errorPill}>
+              <AlertCircle size={13} color={Colors.danger} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : isLoading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="small" color={Colors.primaryLight} />
+              <Text style={styles.loadingText}>Verifying...</Text>
+            </View>
+          ) : (
+            <View style={styles.statusPlaceholder} />
+          )}
         </View>
-        <Text style={styles.promptDesc}>
-          Enter your assigned PIN to unlock your terminal
+
+        {/* Modern On-Screen Numeric Keypad */}
+        <View style={styles.keypad}>
+          <View style={styles.keypadRow}>
+            {['1', '2', '3'].map((n) => (
+              <TouchableOpacity
+                key={n}
+                onPress={() => handleKeyPress(n)}
+                disabled={isLoading}
+                style={styles.keyButton}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.keyText}>{n}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.keypadRow}>
+            {['4', '5', '6'].map((n) => (
+              <TouchableOpacity
+                key={n}
+                onPress={() => handleKeyPress(n)}
+                disabled={isLoading}
+                style={styles.keyButton}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.keyText}>{n}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.keypadRow}>
+            {['7', '8', '9'].map((n) => (
+              <TouchableOpacity
+                key={n}
+                onPress={() => handleKeyPress(n)}
+                disabled={isLoading}
+                style={styles.keyButton}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.keyText}>{n}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.keypadRow}>
+            <TouchableOpacity
+              onPress={handleClear}
+              disabled={isLoading || pin.length === 0}
+              style={styles.keyButtonSide}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.clearText}>Clear</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleKeyPress('0')}
+              disabled={isLoading}
+              style={styles.keyButton}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.keyText}>0</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDelete}
+              disabled={isLoading || pin.length === 0}
+              style={styles.keyButtonSide}
+              activeOpacity={0.6}
+            >
+              <Delete size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <Text style={styles.footerNote}>
+          End-to-End Encrypted Microfinance Terminal • Offline Enabled
         </Text>
-
-        {/* 4 Interactive PIN Dots with Shake Animation */}
-        <Animated.View
-          style={[
-            styles.pinDotsRow,
-            { transform: [{ translateX: shakeAnim }] },
-          ]}
-        >
-          {[0, 1, 2, 3].map((index) => {
-            const isFilled = pin.length > index;
-            return (
-              <View
-                key={index}
-                style={[
-                  styles.pinDot,
-                  isFilled && styles.pinDotFilled,
-                  !!error && styles.pinDotError,
-                ]}
-              />
-            );
-          })}
-        </Animated.View>
-
-        {error ? (
-          <View style={styles.errorPill}>
-            <AlertCircle size={13} color={Colors.danger} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : (
-          <Text style={styles.hintText}></Text>
-        )}
-
-        {isLoading && (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="small" color={Colors.primaryLight} />
-            <Text style={styles.loadingText}>Verifying...</Text>
-          </View>
-        )}
       </View>
-
-      {/* Modern On-Screen Numeric Keypad */}
-      <View style={styles.keypad}>
-        <View style={styles.keypadRow}>
-          {['1', '2', '3'].map((n) => (
-            <TouchableOpacity
-              key={n}
-              onPress={() => handleKeyPress(n)}
-              disabled={isLoading}
-              style={styles.keyButton}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.keyText}>{n}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.keypadRow}>
-          {['4', '5', '6'].map((n) => (
-            <TouchableOpacity
-              key={n}
-              onPress={() => handleKeyPress(n)}
-              disabled={isLoading}
-              style={styles.keyButton}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.keyText}>{n}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.keypadRow}>
-          {['7', '8', '9'].map((n) => (
-            <TouchableOpacity
-              key={n}
-              onPress={() => handleKeyPress(n)}
-              disabled={isLoading}
-              style={styles.keyButton}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.keyText}>{n}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.keypadRow}>
-          <TouchableOpacity
-            onPress={handleClear}
-            disabled={isLoading || pin.length === 0}
-            style={styles.keyButtonSide}
-            activeOpacity={0.6}
-          >
-            <Text style={styles.clearText}>Clear</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => handleKeyPress('0')}
-            disabled={isLoading}
-            style={styles.keyButton}
-            activeOpacity={0.6}
-          >
-            <Text style={styles.keyText}>0</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleDelete}
-            disabled={isLoading || pin.length === 0}
-            style={styles.keyButtonSide}
-            activeOpacity={0.6}
-          >
-            <Delete size={22} color={Colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <Text style={styles.footerNote}>
-        End-to-End Encrypted Microfinance Terminal • Offline Enabled
-      </Text>
     </View>
   );
 };
@@ -228,30 +228,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    justifyContent: 'space-between',
-    paddingVertical: 45,
-    paddingHorizontal: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
   },
   header: {
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 14,
   },
   logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
     color: Colors.text,
     letterSpacing: 2,
@@ -259,37 +265,38 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     fontSize: 11,
     color: Colors.textSecondary,
-    marginTop: 3,
+    marginTop: 2,
   },
   promptContainer: {
     alignItems: 'center',
-    marginVertical: 10,
+    marginBottom: 12,
+    width: '100%',
   },
   lockRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   promptTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: Colors.text,
   },
   promptDesc: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   pinDotsRow: {
     flexDirection: 'row',
-    gap: 18,
-    marginBottom: 12,
+    gap: 14,
+    marginBottom: 8,
   },
   pinDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
     borderWidth: 2,
     borderColor: Colors.surfaceBorder,
     backgroundColor: 'transparent',
@@ -309,46 +316,43 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: Colors.dangerLight,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 6,
-    marginTop: 4,
+    height: 24,
   },
   errorText: {
     color: Colors.danger,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
-  hintText: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    marginTop: 4,
+  statusPlaceholder: {
+    height: 24,
   },
   loadingBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
+    gap: 6,
+    height: 24,
   },
   loadingText: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.primaryLight,
     fontWeight: '600',
   },
   keypad: {
     width: '100%',
-    maxWidth: 320,
-    alignSelf: 'center',
-    gap: 12,
+    gap: 8,
+    marginBottom: 12,
   },
   keypadRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   keyButton: {
     flex: 1,
-    height: 64,
-    borderRadius: 16,
+    height: 52,
+    borderRadius: 14,
     backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -356,24 +360,24 @@ const styles = StyleSheet.create({
     borderColor: Colors.surfaceBorder,
     shadowColor: Colors.shadowDark,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
+    shadowOpacity: 0.8,
+    shadowRadius: 3,
     elevation: 2,
   },
   keyText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: Colors.text,
   },
   keyButtonSide: {
     flex: 1,
-    height: 64,
-    borderRadius: 32,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
   clearText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
   },

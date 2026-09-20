@@ -594,12 +594,17 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   identityCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderColor: Colors.surfaceBorder,
     marginBottom: 12,
+    shadowColor: Colors.shadowDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   identityRow: {
     flexDirection: 'row',
@@ -610,11 +615,11 @@ const styles = StyleSheet.create({
   identityName: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: Colors.text,
   },
   identityMeta: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   statusBadge: {
@@ -635,14 +640,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.surfaceHover,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
   },
   detailChipText: {
     fontSize: 11,
-    color: '#CBD5E1',
+    color: Colors.textSecondary,
     fontWeight: '600',
   },
   finCard: {

@@ -30,6 +30,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Invalid PIN or credentials entered" }, { status: 401 });
     }
 
+    if (user.status && user.status !== "ACTIVE") {
+      return NextResponse.json({ success: false, message: "User account is inactive. Please contact administrator." }, { status: 403 });
+    }
+
     const permissions = {
       canCollectCash: user.canCollectCash ?? true,
       canCollectUPI: user.canCollectUPI ?? true,
@@ -47,7 +51,7 @@ export async function POST(req: Request) {
       role: user.role,
       status: user.status,
       loginId: user.loginId || `AGT-${user.userId?.replace('USR-', '')}`,
-      pin: user.pin || pin,
+      pin: user.pin || "",
       password: user.password || "agentpassword",
       recoveryEfficiency: Number(user.recoveryEfficiency) || 94.0,
       todayCollected: Number(user.todayCollected) || 0,

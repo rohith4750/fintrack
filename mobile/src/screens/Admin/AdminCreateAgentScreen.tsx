@@ -34,7 +34,7 @@ export const AdminCreateAgentScreen: React.FC<{ navigation: any }> = ({ navigati
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [loginId, setLoginId] = useState('');
-  const [pin, setPin] = useState('1234');
+  const [pin, setPin] = useState('');
   const [password, setPassword] = useState('agentpassword');
   const [showPin, setShowPin] = useState(false);
 
@@ -227,7 +227,7 @@ export const AdminCreateAgentScreen: React.FC<{ navigation: any }> = ({ navigati
               maxLength={4}
               keyboardType="number-pad"
               secureTextEntry={!showPin}
-              placeholder="1234"
+              placeholder="e.g. 5678"
               placeholderTextColor={Colors.textMuted}
             />
             <Text style={styles.helperText}>Agent enters this PIN to instantly unlock mobile collections.</Text>

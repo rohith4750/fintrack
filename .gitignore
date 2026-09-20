@@ -18,6 +18,8 @@ dist/
 *.key
 *.mobileprovision
 *.orig.*
+mobile/android/
+mobile/ios/
 
 # Environment variables
 .env.local

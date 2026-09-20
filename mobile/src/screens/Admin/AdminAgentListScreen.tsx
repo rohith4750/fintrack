@@ -84,7 +84,7 @@ export const AdminAgentListScreen: React.FC<{ navigation: any }> = ({ navigation
 
   const handleOpenSecurity = (agent: User) => {
     setSelectedAgentForSecurity(agent);
-    setEditPin(agent.pin || '1234');
+    setEditPin(agent.pin || '');
     setEditPassword(agent.password || 'agentpassword');
   };
 

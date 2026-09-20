@@ -140,10 +140,10 @@ export const AdminAgentCollectionScreen: React.FC<{ navigation: any }> = ({ navi
         <View style={styles.topActionsRow}>
           <TouchableOpacity
             onPress={() => navigation.navigate('AdminHandovers')}
-            style={[styles.topActionBtn, { backgroundColor: '#1E293B', borderColor: '#3B82F6' }]}
+            style={[styles.topActionBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder }]}
           >
-            <Banknote size={15} color="#60A5FA" />
-            <Text style={[styles.topActionText, { color: '#93C5FD' }]}>Vault Denominations</Text>
+            <Banknote size={15} color={Colors.primary} />
+            <Text style={[styles.topActionText, { color: Colors.text }]}>Vault Denominations</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -416,12 +416,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   kpiContainer: {
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderColor: Colors.surfaceBorder,
     marginBottom: 14,
+    shadowColor: Colors.shadowDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   kpiHeader: {
     flexDirection: 'row',
@@ -432,15 +437,15 @@ const styles = StyleSheet.create({
   kpiHeaderText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#93C5FD',
+    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   kpiBadge: {
     fontSize: 10,
     fontWeight: '800',
-    color: Colors.primaryLight,
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    color: Colors.primaryDark,
+    backgroundColor: Colors.primaryBg,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
@@ -454,25 +459,25 @@ const styles = StyleSheet.create({
   },
   kpiLabel: {
     fontSize: 9,
-    color: '#94A3B8',
+    color: Colors.textMuted,
     fontWeight: '700',
   },
   kpiTotalVal: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: Colors.text,
     marginTop: 2,
   },
   kpiCashVal: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#10B981',
+    color: Colors.successDark,
     marginTop: 2,
   },
   kpiUpiVal: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#A855F7',
+    color: '#7C3AED',
     marginTop: 2,
   },
   searchContainer: {

@@ -17,9 +17,9 @@ export const Colors = {
   successDark: '#0B7A44',
   successLight: '#E6F4EA',
 
-  warning: '#F59E0B',
-  warningDark: '#D97706',
-  warningLight: '#FEF9EC',
+  warning: '#B45309',
+  warningDark: '#92400E',
+  warningLight: '#FEF3C7',
 
   danger: '#D93025',
   dangerDark: '#B52319',
@@ -28,10 +28,10 @@ export const Colors = {
   info: '#0288D1',
   infoLight: '#E1F5FE',
 
-  // Text — sharp and readable
+  // Text — sharp, crisp, and high-contrast
   text: '#0D1B2A',
-  textSecondary: '#3D4E6B',
-  textMuted: '#7B8EA8',
+  textSecondary: '#334155',
+  textMuted: '#64748B',
   textDark: '#0D1B2A',
 
   // Thermal Paper Aesthetic

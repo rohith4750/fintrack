@@ -249,12 +249,17 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   summaryCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderColor: Colors.surfaceBorder,
     marginBottom: 14,
+    shadowColor: Colors.shadowDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -265,7 +270,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#93C5FD',
+    color: Colors.primaryDark,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -274,19 +279,19 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: Colors.textMuted,
     fontWeight: '700',
   },
   cashBigVal: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#10B981',
+    color: Colors.successDark,
     marginTop: 2,
   },
   upiBigVal: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#60A5FA',
+    color: Colors.primary,
     marginTop: 2,
   },
   card: {
