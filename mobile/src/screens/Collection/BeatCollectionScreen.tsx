@@ -39,14 +39,21 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
   const loadData = async () => {
     if (!user) return;
     try {
+      const agentId = user.userId || user.id;
       const [assignedRoutes, assignedLoans] = await Promise.all([
-        ApiService.getAssignedRoutes(user.userId || user.id),
+        ApiService.getAssignedRoutes(agentId),
         ApiService.getAssignedLoans(
-          user.userId || user.id,
+          agentId,
           selectedRouteId === 'ALL' ? undefined : selectedRouteId
         ),
       ]);
-      setRoutes(assignedRoutes);
+
+      // Only show routes that actually have borrowers/loans on them
+      const routeIdsWithLoans = new Set(assignedLoans.map((l) => l.routeId));
+      const activeRoutes = assignedRoutes.filter(
+        (r) => routeIdsWithLoans.has(r.id) || routeIdsWithLoans.has(r.routeId || '')
+      );
+      setRoutes(activeRoutes.length > 0 ? activeRoutes : []);
       setLoans(assignedLoans);
     } catch (e) {
       console.log('Error loading beat collection data', e);

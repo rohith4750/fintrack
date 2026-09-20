@@ -13,7 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { HeaderBar } from '../../components/HeaderBar';
 import { KpiCard } from '../../components/KpiCard';
 import { ApiService } from '../../services/api';
-import { Loan, Route } from '../../types';
+import { Loan, Route, Collection } from '../../types';
 import {
   IndianRupee,
   ShieldCheck,
@@ -30,6 +30,7 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const { user } = useAuth();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -39,12 +40,25 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const loadDashboardData = async () => {
     if (!user) return;
     try {
-      const [assignedRoutes, assignedLoans] = await Promise.all([
-        ApiService.getAssignedRoutes(user.userId || user.id),
-        ApiService.getAssignedLoans(user.userId || user.id),
+      const agentId = user.userId || user.id;
+      const [assignedRoutes, assignedLoans, todayCol] = await Promise.all([
+        ApiService.getAssignedRoutes(agentId),
+        ApiService.getAssignedLoans(agentId),
+        ApiService.getTodayCollections(agentId),
       ]);
-      setRoutes(assignedRoutes);
+
+      // Only keep routes that actually have loans/customers on them
+      const routeIdsWithLoans = new Set(assignedLoans.map((l) => l.routeId));
+      const activeRoutes = assignedRoutes.filter((r) => routeIdsWithLoans.has(r.id) || routeIdsWithLoans.has(r.routeId || ''));
+
+      setRoutes(activeRoutes.length > 0 ? activeRoutes : assignedRoutes);
       setLoans(assignedLoans);
+
+      // Filter collections to only this agent's
+      const myCollections = todayCol.filter(
+        (c) => c.agentId === agentId || c.agentName === user.name
+      );
+      setCollections(myCollections);
     } catch (e) {
       console.log('Error loading dashboard data', e);
     }
@@ -56,12 +70,19 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
     setRefreshing(false);
   };
 
-  const todayCollected = user?.todayCollected || 18500;
-  const todayTarget = user?.todayTarget || 30000;
-  const targetPercent = Math.min(100, Math.round((todayCollected / todayTarget) * 100));
+  // Compute real stats from actual data — no mock/hardcoded values
+  const todayCollected = collections.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const todayTarget = routes.reduce((sum, r) => sum + (r.todayTarget || 0), 0) || loans.reduce((sum, l) => sum + (l.installmentAmount || 0), 0);
+  const targetPercent = todayTarget > 0 ? Math.min(100, Math.round((todayCollected / todayTarget) * 100)) : 0;
 
-  const cashLimit = user?.maxDailyCashLimit || 75000;
-  const cashLimitPercent = Math.min(100, Math.round((todayCollected / cashLimit) * 100));
+  const cashLimit = user?.maxDailyCashLimit || 100000;
+  const cashInHand = collections.filter((c) => c.paymentMethod === 'CASH').reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+  const cashLimitPercent = cashLimit > 0 ? Math.min(100, Math.round((cashInHand / cashLimit) * 100)) : 0;
+
+  // Recovery efficiency: totalPaid / totalRepayable across this agent's loans
+  const totalRepayable = loans.reduce((sum, l) => sum + (l.totalRepayableAmount || 0), 0);
+  const totalPaid = loans.reduce((sum, l) => sum + (l.totalPaidAmount || 0), 0);
+  const recoveryEfficiency = totalRepayable > 0 ? Math.round((totalPaid / totalRepayable) * 1000) / 10 : 0;
 
   const overdueLoans = loans.filter(
     (l) => l.status === 'OVERDUE' || l.status === 'DEFAULTED'
@@ -117,7 +138,7 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
 
         <KpiCard
           label="Cash-in-Hand vs Safety Limit"
-          value={`₹${todayCollected.toLocaleString('en-IN')}`}
+          value={`₹${cashInHand.toLocaleString('en-IN')}`}
           subValue={`Max Daily Cash Limit: ₹${cashLimit.toLocaleString('en-IN')} (${cashLimitPercent}% Utilized)`}
           icon={<ShieldCheck size={20} color={Colors.warning} />}
           variant={cashLimitPercent > 80 ? 'danger' : 'warning'}
@@ -128,7 +149,7 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
           <View style={{ flex: 1, marginRight: 6 }}>
             <KpiCard
               label="Recovery Efficiency"
-              value={`${user?.recoveryEfficiency || 94.2}%`}
+              value={`${recoveryEfficiency}%`}
               subValue="On-time Rate"
               icon={<TrendingUp size={18} color={Colors.success} />}
               variant="success"
