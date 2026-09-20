@@ -3,10 +3,12 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Collection, Customer, Loan, Route, User, AgentAttendanceRecord, CashHandoverRecord } from '../types';
 
-// Default Next.js Backend API URLs (LAN IP for native mobile, localhost for web)
+// Default Next.js Backend API URLs
+export const VERCEL_API_BASE_URL = 'https://fintrackssssssssss.vercel.app/api';
 export const LAN_API_BASE_URL = 'http://192.168.31.178:3001/api';
 export const LOCALHOST_API_BASE_URL = 'http://localhost:3001/api';
-export const DEFAULT_API_BASE_URL = Platform.OS === 'web' ? LOCALHOST_API_BASE_URL : LAN_API_BASE_URL;
+// Use Vercel in production; can override via settings screen
+export const DEFAULT_API_BASE_URL = VERCEL_API_BASE_URL;
 
 const STORAGE_KEYS = {
   API_BASE_URL: '@fintrack_api_base_url',
@@ -23,7 +25,7 @@ const STORAGE_KEYS = {
 // Create Axios Instance
 export const apiClient = axios.create({
   baseURL: DEFAULT_API_BASE_URL,
-  timeout: 8000,
+  timeout: 15000, // 15s — accounts for Vercel cold start
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
