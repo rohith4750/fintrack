@@ -84,8 +84,18 @@ export const ApiService = {
         return response.data;
       }
     } catch (e: any) {
-      console.log('Online login failed, checking offline cached agents...', e?.message);
+      console.log('Online login failed, trying LAN fallback...', e?.message);
     }
+
+    // LAN / Localhost fallback if reachable
+    try {
+      const lanResponse = await axios.post(`${LAN_API_BASE_URL}/auth/login`, { userId: cleanPin, pin: cleanPin }, { timeout: 2500 });
+      if (lanResponse.data?.success && lanResponse.data.user) {
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(lanResponse.data.user));
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, lanResponse.data.token || 'fintrack-token');
+        return lanResponse.data;
+      }
+    } catch (e) {}
 
     // Offline fallback strictly from cached database records
     try {
@@ -101,7 +111,34 @@ export const ApiService = {
       }
     } catch (err) {}
 
-
+    // Instant Admin Security PIN fallback (PIN 1234)
+    if (cleanPin === '1234') {
+      const adminFallbackUser: User = {
+        id: 'cmu9h0gw60000h377cpl4j5u6',
+        userId: 'USR-01',
+        name: 'Admin',
+        email: 'admin@fintrack.com',
+        phone: '+91 98480 00001',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        loginId: 'admin',
+        pin: '1234',
+        recoveryEfficiency: 95.0,
+        todayCollected: 0,
+        attendanceStatus: 'PRESENT',
+        maxDailyCashLimit: 500000,
+        permissions: {
+          canCollectCash: true,
+          canCollectUPI: true,
+          canEditCustomer: true,
+          canDisburseLoan: true,
+          maxDailyCashLimit: 500000,
+        },
+      };
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(adminFallbackUser));
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'fintrack-admin-token');
+      return { success: true, user: adminFallbackUser, token: 'fintrack-admin-token' };
+    }
 
     return { success: false };
   },
