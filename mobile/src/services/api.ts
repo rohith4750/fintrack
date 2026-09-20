@@ -48,29 +48,24 @@ apiClient.interceptors.request.use(async (config: any) => {
   return config;
 });
 
-// Fallback attempt to LAN IP / Localhost if request fails
+// Clear any old cached LAN/localhost URL so Vercel is always used
+AsyncStorage.getItem(STORAGE_KEYS.API_BASE_URL).then((cached) => {
+  if (cached && !cached.includes('vercel.app')) {
+    AsyncStorage.removeItem(STORAGE_KEYS.API_BASE_URL);
+  }
+});
+
+// Response interceptor — only retry on real network errors, never on 404
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    // Don't fallback on 404 (route doesn't exist on server) — only true network failures
     if (
-      error.code === 'ECONNABORTED' ||
-      error.message?.includes('Network Error') ||
-      error.message?.includes('timeout') ||
-      error.response?.status === 404
+      (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) &&
+      !error.config?._retried
     ) {
-      if (!originalRequest._retryWithLan) {
-        originalRequest._retryWithLan = true;
-        try {
-          const currentUrl = originalRequest.baseURL || DEFAULT_API_BASE_URL;
-          const nextBaseUrl = currentUrl.includes('localhost') ? LAN_API_BASE_URL : LOCALHOST_API_BASE_URL;
-          originalRequest.baseURL = nextBaseUrl;
-          await AsyncStorage.setItem(STORAGE_KEYS.API_BASE_URL, nextBaseUrl);
-          return await axios(originalRequest);
-        } catch (retryErr) {
-          return Promise.reject(error);
-        }
-      }
+      error.config._retried = true;
+      return axios(error.config);
     }
     return Promise.reject(error);
   }
