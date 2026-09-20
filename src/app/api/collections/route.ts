@@ -22,11 +22,35 @@ export async function POST(req: Request) {
     const body = await req.json();
     const receiptNumber = body.receiptNumber || `RCP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const loan = await prisma.loan.findUnique({
-      where: { loanNumber: body.loanNumber || body.loanId },
+    const loanKey = body.loanNumber || body.loanId;
+    const loan = await prisma.loan.findFirst({
+      where: {
+        OR: [{ id: loanKey }, { loanNumber: loanKey }],
+      },
     });
 
+    if (loan && (loan.status === "CLOSED" || loan.outstandingBalance <= 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "This loan is already fully repaid and closed. No further collections are permitted.",
+        },
+        { status: 400 }
+      );
+    }
+
     const amount = Number(body.amount);
+
+    if (loan && amount > loan.outstandingBalance) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Payment amount (₹${amount}) exceeds remaining outstanding balance (₹${loan.outstandingBalance}).`,
+        },
+        { status: 400 }
+      );
+    }
+
     const balanceAfterPayment = loan ? Math.max(0, loan.outstandingBalance - amount) : 0;
 
     const collection = await prisma.collection.create({
@@ -52,7 +76,7 @@ export async function POST(req: Request) {
     if (loan) {
       const newPaid = loan.totalPaidAmount + amount;
       await prisma.loan.update({
-        where: { loanNumber: loan.loanNumber },
+        where: { id: loan.id },
         data: {
           totalPaidAmount: newPaid,
           outstandingBalance: balanceAfterPayment,

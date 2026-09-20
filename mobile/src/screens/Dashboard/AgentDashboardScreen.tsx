@@ -84,7 +84,7 @@ export const AgentDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
   const recoveryEfficiency = totalRepayable > 0 ? Math.round((totalPaid / totalRepayable) * 1000) / 10 : 0;
 
   const overdueLoans = loans.filter(
-    (l) => l.status === 'OVERDUE' || l.status === 'DEFAULTED'
+    (l) => (l.status === 'OVERDUE' || l.status === 'DEFAULTED') && l.outstandingBalance > 0
   );
 
   return (

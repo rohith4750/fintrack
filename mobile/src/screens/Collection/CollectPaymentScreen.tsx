@@ -85,10 +85,19 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
   const unpaidInstallments = (loan.installments || []).filter((i) => i.status !== 'PAID');
   const unpaidDueDates = unpaidInstallments.map((i) => i.dueDate);
 
+  const isClosed = loan.status === 'CLOSED' || loan.outstandingBalance <= 0;
   const baseEmi = loan.installmentAmount;
-  const totalPayable = baseEmi * selectedWeeks;
+  const totalPayable = isClosed ? 0 : baseEmi * selectedWeeks;
 
   const handleSubmit = async () => {
+    if (isClosed) {
+      Alert.alert(
+        'Loan Fully Settled',
+        'This loan is completely repaid and closed. No further EMI collections can be recorded.'
+      );
+      return;
+    }
+
     if (totalPayable <= 0) {
       Alert.alert('Invalid Amount', 'Please select at least 1 installment to collect');
       return;
@@ -153,6 +162,19 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Closed Loan Notification Banner */}
+        {isClosed && (
+          <View style={styles.closedBanner}>
+            <CheckCircle2 size={24} color={Colors.success} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.closedBannerTitle}>Loan Fully Settled & Closed</Text>
+              <Text style={styles.closedBannerSubtitle}>
+                All scheduled EMI installments for this loan have been completely repaid. Remaining balance is ₹0. No further collections can be accepted.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Borrower Card Header */}
         <View style={styles.borrowerCard}>
           <View style={styles.borrowerTop}>
@@ -172,99 +194,110 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
             </View>
             <View style={styles.loanStatItem}>
               <Text style={styles.loanStatLabel}>Outstanding Balance</Text>
-              <Text style={[styles.loanStatValue, { color: Colors.warning }]}>
-                ₹{loan.outstandingBalance.toLocaleString('en-IN')}
+              <Text style={[styles.loanStatValue, { color: isClosed ? Colors.success : Colors.warning }]}>
+                {isClosed ? '₹0 (Settled)' : `₹${loan.outstandingBalance.toLocaleString('en-IN')}`}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Advance Weeks Multiplier Component */}
-        <AdvanceSelector
-          baseEmi={baseEmi}
-          selectedWeeks={selectedWeeks}
-          onSelectWeeks={setSelectedWeeks}
-          unpaidDueDates={unpaidDueDates}
-        />
+        {isClosed ? (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.returnBtn}
+          >
+            <Text style={styles.returnBtnText}>Return to Ledger / Dashboard</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            {/* Advance Weeks Multiplier Component */}
+            <AdvanceSelector
+              baseEmi={baseEmi}
+              selectedWeeks={selectedWeeks}
+              onSelectWeeks={setSelectedWeeks}
+              unpaidDueDates={unpaidDueDates}
+            />
 
-        {/* Total Amount Callout Card */}
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Total Collection Amount</Text>
-          <Text style={styles.totalValue}>₹{totalPayable.toLocaleString('en-IN')}</Text>
-          <Text style={styles.totalSub}>
-            Includes {selectedWeeks} weekly installment{selectedWeeks > 1 ? 's' : ''} (₹{baseEmi} × {selectedWeeks})
-          </Text>
-        </View>
-
-        {/* Payment Method Selector */}
-        <View style={styles.paymentMethodSection}>
-          <Text style={styles.sectionTitle}>Payment Mode</Text>
-          <View style={styles.modeButtonsRow}>
-            <TouchableOpacity
-              onPress={() => setPaymentMethod('CASH')}
-              style={[styles.modeBtn, paymentMethod === 'CASH' && styles.modeBtnActive]}
-            >
-              <Banknote size={18} color={paymentMethod === 'CASH' ? '#FFF' : Colors.textMuted} />
-              <Text style={[styles.modeBtnText, paymentMethod === 'CASH' && styles.modeBtnTextActive]}>
-                Physical Cash
+            {/* Total Amount Callout Card */}
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Total Collection Amount</Text>
+              <Text style={styles.totalValue}>₹{totalPayable.toLocaleString('en-IN')}</Text>
+              <Text style={styles.totalSub}>
+                Includes {selectedWeeks} weekly installment{selectedWeeks > 1 ? 's' : ''} (₹{baseEmi} × {selectedWeeks})
               </Text>
-            </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              onPress={() => setPaymentMethod('UPI')}
-              style={[styles.modeBtn, paymentMethod === 'UPI' && styles.modeBtnActive]}
-            >
-              <QrCode size={18} color={paymentMethod === 'UPI' ? '#FFF' : Colors.textMuted} />
-              <Text style={[styles.modeBtnText, paymentMethod === 'UPI' && styles.modeBtnTextActive]}>
-                UPI QR / PhonePe
-              </Text>
-            </TouchableOpacity>
-          </View>
+            {/* Payment Method Selector */}
+            <View style={styles.paymentMethodSection}>
+              <Text style={styles.sectionTitle}>Payment Mode</Text>
+              <View style={styles.modeButtonsRow}>
+                <TouchableOpacity
+                  onPress={() => setPaymentMethod('CASH')}
+                  style={[styles.modeBtn, paymentMethod === 'CASH' && styles.modeBtnActive]}
+                >
+                  <Banknote size={18} color={paymentMethod === 'CASH' ? '#FFF' : Colors.textMuted} />
+                  <Text style={[styles.modeBtnText, paymentMethod === 'CASH' && styles.modeBtnTextActive]}>
+                    Physical Cash
+                  </Text>
+                </TouchableOpacity>
 
-          {paymentMethod === 'UPI' && (
-            <View style={styles.upiInputWrapper}>
-              <Text style={styles.inputLabel}>UPI UTR / Reference ID</Text>
+                <TouchableOpacity
+                  onPress={() => setPaymentMethod('UPI')}
+                  style={[styles.modeBtn, paymentMethod === 'UPI' && styles.modeBtnActive]}
+                >
+                  <QrCode size={18} color={paymentMethod === 'UPI' ? '#FFF' : Colors.textMuted} />
+                  <Text style={[styles.modeBtnText, paymentMethod === 'UPI' && styles.modeBtnTextActive]}>
+                    UPI QR / PhonePe
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {paymentMethod === 'UPI' && (
+                <View style={styles.upiInputWrapper}>
+                  <Text style={styles.inputLabel}>UPI UTR / Reference ID</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={upiRef}
+                    onChangeText={setUpiRef}
+                    placeholder="e.g. 426899120345"
+                    placeholderTextColor={Colors.textMuted}
+                  />
+                </View>
+              )}
+            </View>
+
+            {/* Optional Remarks */}
+            <View style={styles.remarksSection}>
+              <Text style={styles.sectionTitle}>Collection Remarks (Optional)</Text>
               <TextInput
-                style={styles.input}
-                value={upiRef}
-                onChangeText={setUpiRef}
-                placeholder="e.g. 426899120345"
+                style={styles.remarksInput}
+                value={remarks}
+                onChangeText={setRemarks}
+                placeholder="e.g. Borrower paid in advance for festival week"
                 placeholderTextColor={Colors.textMuted}
+                multiline
               />
             </View>
-          )}
-        </View>
 
-        {/* Optional Remarks */}
-        <View style={styles.remarksSection}>
-          <Text style={styles.sectionTitle}>Collection Remarks (Optional)</Text>
-          <TextInput
-            style={styles.remarksInput}
-            value={remarks}
-            onChangeText={setRemarks}
-            placeholder="e.g. Borrower paid in advance for festival week"
-            placeholderTextColor={Colors.textMuted}
-            multiline
-          />
-        </View>
-
-        {/* Submit & Generate Thermal Receipt Button */}
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-          style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <>
-              <Receipt size={18} color="#FFF" />
-              <Text style={styles.submitBtnText}>
-                Confirm & Issue Receipt (₹{totalPayable})
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+            {/* Submit & Generate Thermal Receipt Button */}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+              style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <Receipt size={18} color="#FFF" />
+                  <Text style={styles.submitBtnText}>
+                    Confirm & Issue Receipt (₹{totalPayable})
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -461,5 +494,42 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     color: '#FFF',
+  },
+  closedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  closedBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.success,
+  },
+  closedBannerSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  returnBtn: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderRadius: 12,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  returnBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text,
   },
 });

@@ -383,20 +383,27 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
 
         {/* Action Button */}
         {loan && (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('CollectPayment', {
-                loanId: loan.id,
-                customerId: customer.id,
-              })
-            }
-            style={styles.floatingCollectBtn}
-          >
-            <Sparkles size={16} color="#FFF" />
-            <Text style={styles.floatingCollectText}>
-              Collect Payment (₹{loan.installmentAmount}/Wk)
-            </Text>
-          </TouchableOpacity>
+          (loan.status === 'CLOSED' || loan.outstandingBalance <= 0) ? (
+            <View style={styles.floatingClosedBanner}>
+              <CheckCircle2 size={18} color={Colors.success} />
+              <Text style={styles.floatingClosedText}>Loan Fully Settled & Closed</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('CollectPayment', {
+                  loanId: loan.id,
+                  customerId: customer.id,
+                })
+              }
+              style={styles.floatingCollectBtn}
+            >
+              <Sparkles size={16} color="#FFF" />
+              <Text style={styles.floatingCollectText}>
+                Collect Payment (₹{loan.installmentAmount}/Wk)
+              </Text>
+            </TouchableOpacity>
+          )
         )}
       </ScrollView>
     </View>
@@ -751,5 +758,22 @@ const styles = StyleSheet.create({
     color: Colors.warning,
     fontSize: 12,
     fontWeight: '700',
+  },
+  floatingClosedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderRadius: 12,
+    height: 50,
+    marginTop: 14,
+  },
+  floatingClosedText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.success,
   },
 });

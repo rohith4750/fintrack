@@ -561,14 +561,24 @@ export const LoanLedgerScreen: React.FC<{ route: any; navigation: any }> = ({ ro
           )}
         </View>
 
-        {/* Bottom Action: Collect EMI */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('CollectPayment', { loanId: loan.id, loan })}
-          style={styles.collectBtn}
-        >
-          <Banknote size={18} color="#FFF" />
-          <Text style={styles.collectBtnText}>Collect EMI Payment</Text>
-        </TouchableOpacity>
+        {/* Bottom Action: Closed Banner vs Collect EMI */}
+        {loan.status === 'CLOSED' || loan.outstandingBalance <= 0 ? (
+          <View style={styles.closedLoanBanner}>
+            <CheckCircle2 size={22} color={Colors.success} />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.closedLoanTitle}>Loan Fully Paid & Closed</Text>
+              <Text style={styles.closedLoanSub}>All installments cleared. No outstanding balance.</Text>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CollectPayment', { loanId: loan.id, loan })}
+            style={styles.collectBtn}
+          >
+            <Banknote size={18} color="#FFF" />
+            <Text style={styles.collectBtnText}>Collect EMI Payment</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -1048,5 +1058,25 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 15,
     fontWeight: '800',
+  },
+  closedLoanBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 6,
+  },
+  closedLoanTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.success,
+  },
+  closedLoanSub: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });

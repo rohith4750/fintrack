@@ -29,7 +29,7 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
   const [loans, setLoans] = useState<Loan[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'PAID' | 'OVERDUE'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'PAID' | 'OVERDUE' | 'CLOSED'>('ALL');
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -82,14 +82,16 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
     }
 
     // Status Filter
+    const isClosed = l.status === 'CLOSED' || l.outstandingBalance <= 0;
     const isPaidToday = (l.installments || []).some(
       (i) => i.status === 'PAID' && i.paidDate === '2026-09-20'
     );
-    const isOverdue = l.status === 'OVERDUE' || l.status === 'DEFAULTED';
+    const isOverdue = (l.status === 'OVERDUE' || l.status === 'DEFAULTED') && !isClosed;
 
     if (statusFilter === 'PAID' && !isPaidToday) return false;
-    if (statusFilter === 'PENDING' && isPaidToday) return false;
+    if (statusFilter === 'PENDING' && (isPaidToday || isClosed)) return false;
     if (statusFilter === 'OVERDUE' && !isOverdue) return false;
+    if (statusFilter === 'CLOSED' && !isClosed) return false;
 
     return true;
   });
@@ -145,6 +147,7 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
             { id: 'PENDING', label: 'Pending Due' },
             { id: 'PAID', label: 'Paid Today' },
             { id: 'OVERDUE', label: 'Overdue' },
+            { id: 'CLOSED', label: 'Closed' },
           ].map((chip) => {
             const isSelected = statusFilter === chip.id;
             return (

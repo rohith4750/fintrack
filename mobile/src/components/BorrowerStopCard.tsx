@@ -25,6 +25,7 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
   const paidWeeks = Math.min(loan.durationUnits, Math.max(paidCount, calculatedWeeks));
   const progressPercent = Math.round((paidWeeks / (loan.durationUnits || 1)) * 100);
 
+  const isClosed = loan.status === 'CLOSED' || loan.outstandingBalance <= 0;
   const isOverdue = loan.status === 'OVERDUE' || loan.status === 'DEFAULTED';
   const isPaidToday = (loan.installments || []).some(
     (i) => i.status === 'PAID' && i.paidDate === '2026-09-20'
@@ -46,7 +47,7 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
   };
 
   return (
-    <View style={[styles.card, isOverdue && styles.overdueCard]}>
+    <View style={[styles.card, isOverdue && !isClosed && styles.overdueCard]}>
       {/* Header: Customer Name, Code, and Status Badge */}
       <View style={styles.header}>
         <View style={styles.nameGroup}>
@@ -58,7 +59,12 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
           </Text>
         </View>
 
-        {isPaidToday ? (
+        {isClosed ? (
+          <View style={styles.closedBadge}>
+            <CheckCircle2 size={12} color={Colors.success} />
+            <Text style={styles.closedText}>Fully Paid</Text>
+          </View>
+        ) : isPaidToday ? (
           <View style={styles.paidBadge}>
             <CheckCircle2 size={12} color={Colors.success} />
             <Text style={styles.paidText}>Paid Today</Text>
@@ -101,7 +107,7 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
               styles.progressBarFill,
               {
                 width: `${Math.min(100, Math.max(4, progressPercent))}%`,
-                backgroundColor: isOverdue ? Colors.danger : Colors.primaryLight,
+                backgroundColor: isClosed ? Colors.success : isOverdue ? Colors.danger : Colors.primaryLight,
               },
             ]}
           />
@@ -109,7 +115,9 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
 
         <View style={styles.balanceRow}>
           <Text style={styles.balanceLabel}>Outstanding Balance:</Text>
-          <Text style={styles.balanceValue}>₹{loan.outstandingBalance.toLocaleString('en-IN')}</Text>
+          <Text style={[styles.balanceValue, isClosed && { color: Colors.success }]}>
+            {isClosed ? '₹0 (Settled)' : `₹${loan.outstandingBalance.toLocaleString('en-IN')}`}
+          </Text>
         </View>
       </View>
 
@@ -129,15 +137,22 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
           <Text style={styles.detailsBtnText}>Ledger</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={onCollect}
-          style={[styles.collectBtn, isPaidToday && styles.collectBtnDisabled]}
-        >
-          <Sparkles size={13} color="#FFF" />
-          <Text style={styles.collectBtnText}>
-            {isPaidToday ? 'Collect Advance' : `Collect ₹${loan.installmentAmount}`}
-          </Text>
-        </TouchableOpacity>
+        {isClosed ? (
+          <View style={styles.settledBadge}>
+            <CheckCircle2 size={13} color={Colors.success} />
+            <Text style={styles.settledBadgeText}>Fully Settled</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            onPress={onCollect}
+            style={[styles.collectBtn, isPaidToday && styles.collectBtnDisabled]}
+          >
+            <Sparkles size={13} color="#FFF" />
+            <Text style={styles.collectBtnText}>
+              {isPaidToday ? 'Collect Advance' : `Collect ₹${loan.installmentAmount}`}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -175,6 +190,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
     marginTop: 1,
+  },
+  closedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  closedText: {
+    color: Colors.success,
+    fontSize: 11,
+    fontWeight: '700',
   },
   paidBadge: {
     flexDirection: 'row',
@@ -339,5 +370,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#FFF',
+  },
+  settledBadge: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  settledBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.success,
   },
 });

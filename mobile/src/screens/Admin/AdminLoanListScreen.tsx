@@ -239,18 +239,25 @@ export const AdminLoanListScreen: React.FC<{ navigation: any }> = ({ navigation 
 
               {/* Quick Actions (Collect, Status, Delete) */}
               <View style={styles.actionRow}>
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('CollectPayment', {
-                      loanId: item.id || item.loanNumber,
-                      loan: item,
-                    })
-                  }
-                  style={styles.cardActionBtn}
-                >
-                  <Banknote size={14} color={Colors.primaryLight} />
-                  <Text style={styles.cardActionText}>Collect EMI</Text>
-                </TouchableOpacity>
+                {item.status === 'CLOSED' || item.outstandingBalance <= 0 ? (
+                  <View style={[styles.cardActionBtn, { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}>
+                    <CheckCircle2 size={14} color={Colors.success} />
+                    <Text style={[styles.cardActionText, { color: Colors.success, fontWeight: '700' }]}>Fully Paid</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate('CollectPayment', {
+                        loanId: item.id || item.loanNumber,
+                        loan: item,
+                      })
+                    }
+                    style={styles.cardActionBtn}
+                  >
+                    <Banknote size={14} color={Colors.primaryLight} />
+                    <Text style={styles.cardActionText}>Collect EMI</Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
                   onPress={() => handleToggleStatus(item)}
