@@ -58,11 +58,23 @@ export const LoanLedgerScreen: React.FC<{ route: any; navigation: any }> = ({ ro
       );
       if (found) setLoan(found);
 
-      // Load collections for this loan
+      // Load ALL collections and filter for this loan
       const allCollections = await ApiService.getTodayCollections();
+      const targetLoanId = found?.id || loanId || '';
+      const targetLoanNumber = found?.loanNumber || loanParam?.loanNumber || '';
       const loanCollections = allCollections.filter(
-        (c) => c.loanId === (found?.id || loanId) || c.loanNumber === (found?.loanNumber || '')
+        (c) =>
+          c.loanId === targetLoanId ||
+          c.loanNumber === targetLoanNumber ||
+          c.loanId === targetLoanNumber ||
+          c.loanNumber === targetLoanId
       );
+      // Sort by date descending (newest first)
+      loanCollections.sort((a, b) => {
+        const dateA = a.collectionDate || '';
+        const dateB = b.collectionDate || '';
+        return dateB.localeCompare(dateA);
+      });
       setCollections(loanCollections);
     } catch (e) {
       console.error('Failed to load loan ledger:', e);
@@ -410,30 +422,144 @@ export const LoanLedgerScreen: React.FC<{ route: any; navigation: any }> = ({ ro
           )}
         </View>
 
-        {/* Collection History */}
-        {collections.length > 0 && (
-          <View style={styles.collectionSection}>
-            <Text style={styles.sectionTitle}>RECENT COLLECTION RECEIPTS</Text>
-            {collections.map((col) => (
-              <View key={col.id} style={styles.collectionCard}>
-                <View style={styles.collectionTop}>
-                  <View>
-                    <Text style={styles.collectionReceipt}>{col.receiptNumber}</Text>
-                    <Text style={styles.collectionDate}>{col.collectionDate} • {col.time}</Text>
-                  </View>
-                  <Text style={styles.collectionAmount}>
-                    ₹{(Number(col.amount) || 0).toLocaleString('en-IN')}
-                  </Text>
-                </View>
-                <View style={styles.collectionMeta}>
-                  <Text style={styles.collectionMetaText}>
-                    {col.paymentMethod} • Agent: {col.agentName}
-                  </Text>
-                </View>
+        {/* Payment Timeline — Full History */}
+        <View style={styles.paymentTimelineSection}>
+          <View style={styles.paymentTimelineHeader}>
+            <Text style={styles.sectionTitle}>PAYMENT TIMELINE</Text>
+            <View style={styles.paymentTimelineBadges}>
+              <View style={[styles.miniBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                <Text style={[styles.miniBadgeText, { color: Colors.success }]}>
+                  {collections.length} Payments
+                </Text>
               </View>
-            ))}
+              <View style={[styles.miniBadge, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+                <Text style={[styles.miniBadgeText, { color: Colors.primaryLight }]}>
+                  ₹{collections.reduce((s, c) => s + (Number(c.amount) || 0), 0).toLocaleString('en-IN')} Total
+                </Text>
+              </View>
+            </View>
           </View>
-        )}
+
+          {collections.length === 0 ? (
+            <View style={styles.emptyTimeline}>
+              <Receipt size={28} color={Colors.textMuted} />
+              <Text style={styles.emptyText}>No payments recorded yet.</Text>
+              <Text style={styles.emptySubText}>
+                Payments will appear here after an EMI is collected.
+              </Text>
+            </View>
+          ) : (
+            collections.map((col, idx) => {
+              const isCash = col.paymentMethod === 'CASH';
+              const isUpi = col.paymentMethod === 'UPI';
+              const isBank = col.paymentMethod === 'BANK_TRANSFER';
+              const isLast = idx === collections.length - 1;
+
+              return (
+                <View key={col.id || `col-${idx}`} style={styles.timelineItem}>
+                  {/* Left vertical connector */}
+                  <View style={styles.timelineLeftCol}>
+                    <View
+                      style={[
+                        styles.timelineDotPayment,
+                        {
+                          backgroundColor: isCash
+                            ? Colors.success
+                            : isUpi
+                            ? '#A855F7'
+                            : '#3B82F6',
+                        },
+                      ]}
+                    />
+                    {!isLast && <View style={styles.timelineVerticalLine} />}
+                  </View>
+
+                  {/* Right content card */}
+                  <View style={styles.paymentCard}>
+                    {/* Top row: Date + Amount */}
+                    <View style={styles.timelineCardTop}>
+                      <View>
+                        <Text style={styles.timelineDate}>
+                          {col.collectionDate || 'Today'}
+                        </Text>
+                        <Text style={styles.timelineTime}>
+                          {col.time || '—'}
+                        </Text>
+                      </View>
+                      <Text style={styles.timelineAmount}>
+                        +₹{(Number(col.amount) || 0).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+
+                    {/* Method Badge + Receipt */}
+                    <View style={styles.timelineMethodRow}>
+                      <View
+                        style={[
+                          styles.methodPill,
+                          {
+                            backgroundColor: isCash
+                              ? 'rgba(16, 185, 129, 0.15)'
+                              : isUpi
+                              ? 'rgba(168, 85, 247, 0.15)'
+                              : 'rgba(59, 130, 246, 0.15)',
+                          },
+                        ]}
+                      >
+                        {isCash && <Banknote size={11} color={Colors.success} />}
+                        {isUpi && <IndianRupee size={11} color="#A855F7" />}
+                        {isBank && <WalletCards size={11} color="#3B82F6" />}
+                        <Text
+                          style={[
+                            styles.methodPillText,
+                            {
+                              color: isCash
+                                ? Colors.success
+                                : isUpi
+                                ? '#A855F7'
+                                : '#3B82F6',
+                            },
+                          ]}
+                        >
+                          {isCash ? 'CASH' : isUpi ? 'UPI' : 'BANK TRANSFER'}
+                        </Text>
+                      </View>
+
+                      <Text style={styles.timelineReceiptNo}>
+                        {col.receiptNumber || '—'}
+                      </Text>
+                    </View>
+
+                    {/* UPI Transaction ID (if applicable) */}
+                    {isUpi && col.upiTransactionId && (
+                      <View style={styles.upiRefRow}>
+                        <Text style={styles.upiRefLabel}>UPI Ref:</Text>
+                        <Text style={styles.upiRefValue}>{col.upiTransactionId}</Text>
+                      </View>
+                    )}
+
+                    {/* Agent + Balance Row */}
+                    <View style={styles.timelineFooter}>
+                      <View style={styles.timelineAgentChip}>
+                        <ShieldCheck size={10} color={Colors.textMuted} />
+                        <Text style={styles.timelineAgentText}>
+                          {col.agentName || 'Agent'}
+                        </Text>
+                      </View>
+                      <Text style={styles.timelineBalanceText}>
+                        Balance: ₹{(Number(col.balanceAfterPayment) || 0).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+
+                    {/* Remarks */}
+                    {col.remarks && (
+                      <Text style={styles.timelineRemarks}>Note: {col.remarks}</Text>
+                    )}
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
 
         {/* Bottom Action: Collect EMI */}
         <TouchableOpacity
@@ -760,48 +886,153 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.primaryLight,
   },
-  collectionSection: {
+  paymentTimelineSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
     marginBottom: 12,
   },
-  collectionCard: {
-    backgroundColor: Colors.surface,
+  paymentTimelineHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  paymentTimelineBadges: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  emptyTimeline: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 4,
+  },
+  timelineLeftCol: {
+    alignItems: 'center',
+    width: 14,
+    paddingTop: 4,
+  },
+  timelineDotPayment: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    flexShrink: 0,
+  },
+  timelineVerticalLine: {
+    width: 2,
+    flex: 1,
+    minHeight: 16,
+    backgroundColor: Colors.surfaceBorder,
+    marginTop: 3,
+    marginBottom: 0,
+  },
+  paymentCard: {
+    flex: 1,
+    backgroundColor: Colors.backgroundSecondary,
     borderRadius: 10,
-    padding: 12,
+    padding: 10,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
     marginBottom: 8,
   },
-  collectionTop: {
+  timelineCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: 6,
   },
-  collectionReceipt: {
+  timelineDate: {
     fontSize: 12,
     fontWeight: '800',
-    color: Colors.primaryLight,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: Colors.text,
   },
-  collectionDate: {
-    fontSize: 11,
+  timelineTime: {
+    fontSize: 10,
     color: Colors.textMuted,
     marginTop: 1,
   },
-  collectionAmount: {
+  timelineAmount: {
     fontSize: 15,
     fontWeight: '900',
     color: Colors.success,
   },
-  collectionMeta: {
-    marginTop: 6,
+  timelineMethodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  methodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  methodPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  timelineReceiptNo: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  upiRefRow: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+    marginBottom: 6,
+    backgroundColor: 'rgba(168, 85, 247, 0.08)',
+    padding: 6,
+    borderRadius: 6,
+  },
+  upiRefLabel: {
+    fontSize: 10,
+    color: '#A855F7',
+    fontWeight: '700',
+  },
+  upiRefValue: {
+    fontSize: 10,
+    color: '#C4B5FD',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    flexShrink: 1,
+  },
+  timelineFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: Colors.surfaceBorder,
   },
-  collectionMetaText: {
+  timelineAgentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timelineAgentText: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontWeight: '600',
+  },
+  timelineBalanceText: {
     fontSize: 11,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '700',
+  },
+  timelineRemarks: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   collectBtn: {
     flexDirection: 'row',
