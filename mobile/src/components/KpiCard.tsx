@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
-import { Typography } from '../theme/typography';
 
 interface KpiCardProps {
   label: string;
@@ -9,7 +8,7 @@ interface KpiCardProps {
   subValue?: string;
   icon: React.ReactNode;
   variant?: 'primary' | 'success' | 'warning' | 'danger';
-  progress?: number; // 0 to 100
+  progress?: number;
 }
 
 export const KpiCard: React.FC<KpiCardProps> = ({
@@ -20,32 +19,50 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   variant = 'primary',
   progress,
 }) => {
-  const getBorderColor = () => {
+  const getAccentColor = () => {
     switch (variant) {
-      case 'success':
-        return Colors.success;
-      case 'warning':
-        return Colors.warning;
-      case 'danger':
-        return Colors.danger;
-      default:
-        return Colors.primary;
+      case 'success': return Colors.success;
+      case 'warning': return Colors.warning;
+      case 'danger': return Colors.danger;
+      default: return Colors.primary;
     }
   };
 
+  const getAccentBg = () => {
+    switch (variant) {
+      case 'success': return Colors.successLight;
+      case 'warning': return Colors.warningLight;
+      case 'danger': return Colors.dangerLight;
+      default: return Colors.primaryBg;
+    }
+  };
+
+  const accent = getAccentColor();
+  const accentBg = getAccentBg();
+
   return (
-    <View style={[styles.card, { borderLeftColor: getBorderColor() }]}>
+    <View style={styles.card}>
       <View style={styles.topRow}>
+        <View style={[styles.iconWrapper, { backgroundColor: accentBg }]}>
+          {icon}
+        </View>
         <Text style={styles.label}>{label}</Text>
-        <View style={styles.iconWrapper}>{icon}</View>
       </View>
 
-      <Text style={Typography.currencyLarge}>{value}</Text>
+      <Text style={[styles.value, { color: Colors.text }]}>{value}</Text>
       {subValue && <Text style={styles.subValue}>{subValue}</Text>}
 
       {progress !== undefined && (
         <View style={styles.progressContainer}>
-          <View style={[styles.progressBar, { width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: getBorderColor() }]} />
+          <View
+            style={[
+              styles.progressBar,
+              {
+                width: `${Math.min(100, Math.max(0, progress))}%`,
+                backgroundColor: accent,
+              },
+            ]}
+          />
         </View>
       )}
     </View>
@@ -55,41 +72,56 @@ export const KpiCard: React.FC<KpiCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
-    borderLeftWidth: 4,
-    marginBottom: 10,
+    shadowColor: Colors.shadowDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   topRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    gap: 10,
+    marginBottom: 10,
+  },
+  iconWrapper: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: Colors.textMuted,
+    flex: 1,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
-  iconWrapper: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  value: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.text,
+    letterSpacing: -0.5,
+    marginBottom: 3,
   },
   subValue: {
     fontSize: 12,
     color: Colors.textMuted,
-    marginTop: 2,
+    fontWeight: '400',
+    lineHeight: 16,
   },
   progressContainer: {
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: Colors.surfaceBorder,
     borderRadius: 2,
-    marginTop: 8,
+    marginTop: 10,
     overflow: 'hidden',
   },
   progressBar: {

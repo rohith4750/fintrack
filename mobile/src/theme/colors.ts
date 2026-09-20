@@ -1,37 +1,38 @@
 export const Colors = {
-  // Brand Dark Navy Core
-  background: '#070F1E',
-  backgroundSecondary: '#0B192C',
-  surface: '#12233E',
-  surfaceHover: '#1B2E50',
-  surfaceBorder: '#23385D',
+  // Core backgrounds — clean white like HDFC/PhonePe
+  background: '#F5F7FA',
+  backgroundSecondary: '#FFFFFF',
+  surface: '#FFFFFF',
+  surfaceHover: '#F0F4FF',
+  surfaceBorder: '#E8ECF4',
 
-  // Accents
-  primary: '#2563EB',
-  primaryDark: '#1D4ED8',
-  primaryLight: '#60A5FA',
+  // Primary brand blue — like HDFC/PhonePe
+  primary: '#1A56DB',
+  primaryDark: '#1341B8',
+  primaryLight: '#2563EB',
+  primaryBg: '#EFF4FF',
 
-  // FinTech Status Accents
-  success: '#10B981',
-  successDark: '#059669',
-  successLight: '#D1FAE5',
+  // Status colors — crisp & professional
+  success: '#0F9D58',
+  successDark: '#0B7A44',
+  successLight: '#E6F4EA',
 
   warning: '#F59E0B',
   warningDark: '#D97706',
-  warningLight: '#FEF3C7',
+  warningLight: '#FEF9EC',
 
-  danger: '#EF4444',
-  dangerDark: '#DC2626',
-  dangerLight: '#FEE2E2',
+  danger: '#D93025',
+  dangerDark: '#B52319',
+  dangerLight: '#FCECEA',
 
-  info: '#06B6D4',
-  infoLight: '#CFFAFE',
+  info: '#0288D1',
+  infoLight: '#E1F5FE',
 
-  // Text Colors
-  text: '#FFFFFF',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  textDark: '#0F172A',
+  // Text — sharp and readable
+  text: '#0D1B2A',
+  textSecondary: '#3D4E6B',
+  textMuted: '#7B8EA8',
+  textDark: '#0D1B2A',
 
   // Thermal Paper Aesthetic
   receiptPaper: '#FFFFFF',
@@ -39,6 +40,10 @@ export const Colors = {
   receiptBorder: '#E5E7EB',
 
   // Misc
-  cardOverlay: 'rgba(18, 35, 62, 0.75)',
-  modalOverlay: 'rgba(0, 0, 0, 0.75)',
+  cardOverlay: 'rgba(255, 255, 255, 0.9)',
+  modalOverlay: 'rgba(0, 0, 0, 0.45)',
+
+  // Shadows / elevation
+  shadow: 'rgba(26, 86, 219, 0.08)',
+  shadowDark: 'rgba(13, 27, 42, 0.12)',
 };
