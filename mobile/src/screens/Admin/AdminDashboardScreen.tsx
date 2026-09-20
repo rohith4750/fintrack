@@ -278,6 +278,20 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
         </View>
 
         <TouchableOpacity
+          onPress={() => navigation.navigate('AdminAgentCollections')}
+          style={styles.menuCard}
+        >
+          <View style={[styles.menuIconBox, { backgroundColor: 'rgba(37, 99, 235, 0.1)' }]}>
+            <Receipt size={20} color={Colors.primaryLight} />
+          </View>
+          <View style={styles.menuContent}>
+            <Text style={styles.menuTitle}>Agent Collections Ledger</Text>
+            <Text style={styles.menuSub}>{collections.length} Receipts • Filter by Agent, Cash vs UPI</Text>
+          </View>
+          <ChevronRight size={18} color={Colors.textSecondary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           onPress={() => navigation.navigate('AdminLoans')}
           style={styles.menuCard}
         >

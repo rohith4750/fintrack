@@ -31,6 +31,7 @@ import { AdminDisburseLoanScreen } from '../screens/Admin/AdminDisburseLoanScree
 import { AdminCreateCustomerScreen } from '../screens/Admin/AdminCreateCustomerScreen';
 import { AdminEditCustomerScreen } from '../screens/Admin/AdminEditCustomerScreen';
 import { AdminHandoverScreen } from '../screens/Admin/AdminHandoverScreen';
+import { AdminAgentCollectionScreen } from '../screens/Admin/AdminAgentCollectionScreen';
 
 // Icons
 import {
@@ -173,6 +174,16 @@ function AdminBottomTabs() {
         }}
       />
       <Tab.Screen
+        name="AdminCollectionsTab"
+        component={AdminAgentCollectionScreen}
+        options={{
+          tabBarLabel: 'Collections',
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+            <Receipt size={size - 2} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="AdminLoansTab"
         component={AdminLoanListScreen}
         options={{
@@ -202,16 +213,6 @@ function AdminBottomTabs() {
           ),
         }}
       />
-      <Tab.Screen
-        name="AdminRouteAreaTab"
-        component={AdminRouteAreaScreen}
-        options={{
-          tabBarLabel: 'Beats',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <MapPin size={size - 2} color={color} />
-          ),
-        }}
-      />
     </Tab.Navigator>
   );
 }
@@ -235,6 +236,7 @@ export function AppNavigator() {
             )}
 
             {/* Common & Admin Stack Screens */}
+            <Stack.Screen name="AdminAgentCollections" component={AdminAgentCollectionScreen} />
             <Stack.Screen name="AdminDisburseLoan" component={AdminDisburseLoanScreen} />
             <Stack.Screen name="AdminCreateCustomer" component={AdminCreateCustomerScreen} />
             <Stack.Screen name="AdminEditCustomer" component={AdminEditCustomerScreen} />
