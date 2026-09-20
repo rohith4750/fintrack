@@ -260,6 +260,8 @@ export function AppNavigator() {
             <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
             <Stack.Screen name="CashHandover" component={CashHandoverScreen} />
             <Stack.Screen name="Attendance" component={AttendanceScreen} />
+            <Stack.Screen name="BeatCollection" component={BeatCollectionScreen} />
+            <Stack.Screen name="AgentDashboard" component={AgentDashboardScreen} />
           </>
         )}
       </Stack.Navigator>

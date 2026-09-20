@@ -16,11 +16,15 @@ import { ThermalReceiptPreview } from '../../components/ThermalReceiptPreview';
 import { PrinterService } from '../../services/printerService';
 import { Collection, Customer, Loan } from '../../types';
 import { Printer, Share2, Check, ArrowRight, MessageCircle } from 'lucide-react-native';
+import { useAuth } from '../../context/AuthContext';
 
 export const ReceiptViewScreen: React.FC<{ route: any; navigation: any }> = ({
   route,
   navigation,
 }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
   const { collection, loan, customer } = route.params as {
     collection: Collection;
     loan?: Loan;
@@ -29,6 +33,14 @@ export const ReceiptViewScreen: React.FC<{ route: any; navigation: any }> = ({
 
   const [isPrinting, setIsPrinting] = useState(false);
   const [printSuccess, setPrintSuccess] = useState(false);
+
+  const handleReturn = () => {
+    if (isAdmin) {
+      navigation.navigate('AdminLoans');
+    } else {
+      navigation.navigate('BeatCollection');
+    }
+  };
 
   const handlePrintBluetooth = async () => {
     setIsPrinting(true);
@@ -51,7 +63,7 @@ export const ReceiptViewScreen: React.FC<{ route: any; navigation: any }> = ({
       : `whatsapp://send?text=${text}`;
 
     Linking.openURL(url).catch(() => {
-      Alert.alert('WhatsApp Unavailable', 'Could not open WhatsApp on this device.');
+      Alert.alert('WhatsApp Error', 'Could not open WhatsApp on device.');
     });
   };
 
@@ -61,7 +73,7 @@ export const ReceiptViewScreen: React.FC<{ route: any; navigation: any }> = ({
         title="Payment Receipt"
         subtitle={`Voucher #${collection.receiptNumber}`}
         showBack
-        onBack={() => navigation.navigate('BeatCollection')}
+        onBack={handleReturn}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -107,12 +119,14 @@ export const ReceiptViewScreen: React.FC<{ route: any; navigation: any }> = ({
             <Text style={styles.whatsappBtnText}>Send Receipt via WhatsApp</Text>
           </TouchableOpacity>
 
-          {/* Return to Beat Navigation Button */}
+          {/* Return Button */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('BeatCollection')}
+            onPress={handleReturn}
             style={styles.doneBtn}
           >
-            <Text style={styles.doneBtnText}>Next Borrower on Beat</Text>
+            <Text style={styles.doneBtnText}>
+              {isAdmin ? 'Back to Loan Management' : 'Next Borrower on Beat'}
+            </Text>
             <ArrowRight size={16} color={Colors.primaryLight} />
           </TouchableOpacity>
         </View>
