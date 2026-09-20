@@ -52,7 +52,7 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
       <View style={styles.row}>
         <Text style={styles.label}>Date & Time:</Text>
         <Text style={styles.value}>
-          {collection.collectionDate} {collection.time}
+          {collection.collectionDate}{collection.time ? `  ${collection.time}` : ''}
         </Text>
       </View>
 

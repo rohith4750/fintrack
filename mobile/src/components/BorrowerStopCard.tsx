@@ -27,8 +27,10 @@ export const BorrowerStopCard: React.FC<BorrowerStopCardProps> = ({
 
   const isClosed = loan.status === 'CLOSED' || loan.outstandingBalance <= 0;
   const isOverdue = loan.status === 'OVERDUE' || loan.status === 'DEFAULTED';
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const isPaidToday = (loan.installments || []).some(
-    (i) => i.status === 'PAID' && i.paidDate === '2026-09-20'
+    (i) => i.status === 'PAID' && (i.paidDate === todayStr || i.paidDate === '2026-09-20')
   );
 
   const handleCall = () => {

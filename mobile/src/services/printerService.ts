@@ -14,7 +14,7 @@ export const PrinterService = {
     out += '      OFFICIAL PAYMENT RECEIPT\n';
     out += doubleDivider;
     out += `Receipt No   : ${collection.receiptNumber}\n`;
-    out += `Date & Time  : ${collection.collectionDate} ${collection.time}\n`;
+    out += `Date & Time  : ${collection.collectionDate}${collection.time ? ` ${collection.time}` : ''}\n`;
     out += `Agent ID/Name: ${collection.agentId} / ${collection.agentName}\n`;
     out += `Route / Beat : ${collection.routeName}\n`;
     out += divider;
@@ -68,7 +68,7 @@ export const PrinterService = {
       `Customer: *${collection.customerName}* (${collection.customerCode})\n` +
       `Loan No: *${collection.loanNumber}*\n` +
       `Amount Paid: *₹${collection.amount.toLocaleString('en-IN')}*\n` +
-      `Date: ${collection.collectionDate} ${collection.time}\n` +
+      `Date: ${collection.collectionDate}${collection.time ? ` ${collection.time}` : ''}\n` +
       `Collected By: ${collection.agentName}\n` +
       `Balance Remaining: *₹${collection.balanceAfterPayment.toLocaleString('en-IN')}*\n\n` +
       `Thank you for banking with FinTrack!`

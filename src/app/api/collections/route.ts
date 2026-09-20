@@ -53,6 +53,20 @@ export async function POST(req: Request) {
 
     const balanceAfterPayment = loan ? Math.max(0, loan.outstandingBalance - amount) : 0;
 
+    // Resolve current real timestamp (IST UTC+5:30)
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const ist = new Date(now.getTime() + istOffset);
+    const defaultDate = `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, "0")}-${String(ist.getUTCDate()).padStart(2, "0")}`;
+    let hours = ist.getUTCHours();
+    const minutes = String(ist.getUTCMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    const defaultTime = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+
+    const collectionDate = body.collectionDate || defaultDate;
+    const time = body.time || defaultTime;
+
     const collection = await prisma.collection.create({
       data: {
         receiptNumber,
@@ -62,8 +76,8 @@ export async function POST(req: Request) {
         amount,
         paymentMethod: body.paymentMethod || "CASH",
         upiTransactionId: body.upiTransactionId,
-        collectionDate: body.collectionDate || "2026-09-20",
-        time: body.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        collectionDate,
+        time,
         areaName: body.areaName,
         routeName: body.routeName,
         installmentNumber: body.installmentNumber,

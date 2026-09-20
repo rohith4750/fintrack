@@ -313,7 +313,9 @@ export const AdminAgentCollectionScreen: React.FC<{ navigation: any }> = ({ navi
                   </View>
                   <View style={styles.detailItem}>
                     <Calendar size={12} color={Colors.textMuted} />
-                    <Text style={styles.detailText}>{col.collectionDate || col.time || 'Today'}</Text>
+                    <Text style={styles.detailText}>
+                      {col.collectionDate ? `${col.collectionDate}${col.time ? ` • ${col.time}` : ''}` : col.time || 'Today'}
+                    </Text>
                   </View>
                 </View>
 

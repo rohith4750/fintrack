@@ -110,18 +110,21 @@ export const CollectPaymentScreen: React.FC<{ route: any; navigation: any }> = (
 
     setIsSubmitting(true);
     try {
-      const collectionPayload: Omit<Collection, 'id' | 'receiptNumber' | 'time'> = {
+      const { date: currentDate, time: currentTime } = ApiService.formatCurrentDateTime();
+
+      const collectionPayload: Omit<Collection, 'id' | 'receiptNumber'> = {
         customerId: customer.id,
         customerCode: customer.customerCode,
         customerName: customer.fullName,
         loanId: loan.id,
         loanNumber: loan.loanNumber,
         agentId: user?.userId || 'USR-02',
-        agentName: user?.name || 'Suresh Varma',
+        agentName: user?.name || 'Field Officer',
         amount: totalPayable,
         paymentMethod,
         upiTransactionId: paymentMethod === 'UPI' ? upiRef : undefined,
-        collectionDate: '2026-09-20',
+        collectionDate: currentDate,
+        time: currentTime,
         areaName: loan.areaName,
         routeName: loan.routeName,
         installmentNumber: unpaidInstallments[0]?.installmentNumber || 1,

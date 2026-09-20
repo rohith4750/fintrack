@@ -22,7 +22,7 @@ interface QuickCollectModalProps {
   routes: Route[];
   initialLoanId?: string;
   onClose: () => void;
-  onRecordCollection: (collection: Omit<Collection, "id" | "receiptNumber" | "time">) => void;
+  onRecordCollection: (collection: Omit<Collection, "id" | "receiptNumber">) => void;
 }
 
 export const QuickCollectModal: React.FC<QuickCollectModalProps> = ({
@@ -64,11 +64,19 @@ export const QuickCollectModal: React.FC<QuickCollectModalProps> = ({
     if (!selectedLoan) return;
 
     setIsSubmitting(true);
+    const now = new Date();
+    const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    const currentTime = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+
     const remainingBalance = Math.max(0, selectedLoan.outstandingBalance - Number(amount));
     const emiCount = Math.max(1, Math.round(Number(amount) / (selectedLoan.installmentAmount || 1)));
     const defaultRemarks = emiCount > 1
-      ? `Advance collection of ${emiCount} EMIs paid on 2026-09-20 via ${paymentMethod}`
-      : `EMI installment collected on 2026-09-20 via ${paymentMethod}`;
+      ? `Advance collection of ${emiCount} EMIs paid on ${currentDate} via ${paymentMethod}`
+      : `EMI installment collected on ${currentDate} via ${paymentMethod}`;
 
     onRecordCollection({
       customerId: selectedLoan.customerId,
@@ -81,7 +89,8 @@ export const QuickCollectModal: React.FC<QuickCollectModalProps> = ({
       amount: Number(amount),
       paymentMethod,
       upiTransactionId: paymentMethod === "UPI" ? upiTransactionId || `UPI/${Date.now().toString().slice(-8)}/HDFC` : undefined,
-      collectionDate: "2026-09-20",
+      collectionDate: currentDate,
+      time: currentTime,
       areaName: selectedLoan.areaName,
       routeName: selectedLoan.routeName,
       balanceAfterPayment: remainingBalance,

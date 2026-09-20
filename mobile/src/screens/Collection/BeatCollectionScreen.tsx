@@ -83,9 +83,10 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
     }
 
     // Status Filter
+    const todayStr = ApiService.formatCurrentDateTime().date;
     const isClosed = l.status === 'CLOSED' || l.outstandingBalance <= 0;
     const isPaidToday = (l.installments || []).some(
-      (i) => i.status === 'PAID' && i.paidDate === '2026-09-20'
+      (i) => i.status === 'PAID' && (i.paidDate === todayStr || i.paidDate === '2026-09-20')
     );
     const isOverdue = (l.status === 'OVERDUE' || l.status === 'DEFAULTED') && !isClosed;
 

@@ -632,10 +632,37 @@ export const ApiService = {
     return true;
   },
 
+  // Helper to format consistent local timestamp (YYYY-MM-DD and hh:mm A)
+  formatCurrentDateTime: () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const timeStr = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+
+    return { date: dateStr, time: timeStr };
+  },
+
   // Record Collection Payment
-  recordPayment: async (paymentData: Omit<Collection, 'id' | 'receiptNumber' | 'time' | 'balanceAfterPayment'>): Promise<Collection> => {
+  recordPayment: async (paymentData: any): Promise<Collection> => {
+    const defaultStamp = ApiService.formatCurrentDateTime();
+    const collectionDate = paymentData.collectionDate || defaultStamp.date;
+    const time = paymentData.time || defaultStamp.time;
+
+    const payload = {
+      ...paymentData,
+      collectionDate,
+      time,
+    };
+
     try {
-      const res = await apiClient.post('/collections', paymentData);
+      const res = await apiClient.post('/collections', payload);
       if (res.data?.success && res.data.collection) {
         return res.data.collection;
       }
@@ -645,13 +672,14 @@ export const ApiService = {
 
     const receiptNumber = `RCP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const collection: Collection = {
-      ...paymentData,
+      ...payload,
       id: `COL-${Date.now()}`,
       receiptNumber,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      balanceAfterPayment: Math.max(0, 50000 - paymentData.amount),
+      collectionDate,
+      time,
+      balanceAfterPayment: paymentData.balanceAfterPayment ?? Math.max(0, 50000 - (paymentData.amount || 0)),
       isSynced: true,
-    };
+    } as Collection;
     return collection;
   },
 

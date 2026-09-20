@@ -213,13 +213,22 @@ export default function Home() {
   };
 
   // Record Collection & issue receipt (atomic and single-trigger)
-  const handleRecordCollection = (colData: Omit<Collection, "id" | "receiptNumber" | "time">) => {
+  const handleRecordCollection = (colData: Omit<Collection, "id" | "receiptNumber"> & { time?: string }) => {
+    const now = new Date();
+    const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    const defaultTime = `${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+
     const receiptNo = `RCP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const newCollection: Collection = {
       ...colData,
       id: `COL-${Date.now().toString().slice(-4)}`,
       receiptNumber: receiptNo,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      collectionDate: colData.collectionDate || currentDate,
+      time: colData.time || defaultTime,
     };
 
     updateStore((prev) => {
