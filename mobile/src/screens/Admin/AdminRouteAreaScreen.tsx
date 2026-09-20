@@ -28,6 +28,7 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
   // Form states
   const [routeName, setRouteName] = useState('');
   const [routeCode, setRouteCode] = useState('');
+  const [areaName, setAreaName] = useState('Rajahmundry Urban');
   const [agentName, setAgentName] = useState('Suresh Varma');
   const [dailyTarget, setDailyTarget] = useState('25000');
 
@@ -54,40 +55,11 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
     setRefreshing(false);
   };
 
-  const handleCreateRoute = async () => {
-    if (!routeName.trim() || !routeCode.trim()) {
-      Alert.alert('Validation Error', 'Please enter Route Name and Code.');
-      return;
-    }
-
-    try {
-      const created = await ApiService.addRoute({
-        name: routeName.trim(),
-        code: routeCode.trim().toUpperCase(),
-        areaId: 'AREA-01',
-        areaName: 'Rajahmundry Urban',
-        assignedAgentId: 'USR-02',
-        assignedAgentName: agentName,
-        collectionDay: 'Tuesday',
-        totalCustomers: 0,
-        todayTarget: Number(dailyTarget) || 25000,
-        todayCollected: 0,
-      });
-
-      setRoutes((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
-      setShowAddRoute(false);
-      setRouteName('');
-      setRouteCode('');
-      Alert.alert('Route Created', `Beat Route ${created.name} created successfully.`);
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to create route.');
-    }
-  };
-
   const handleStartEdit = (r: Route) => {
     setEditingRouteId(r.id);
     setRouteName(r.name);
     setRouteCode(r.code);
+    setAreaName(r.areaName || 'Rajahmundry Urban');
     setAgentName(r.assignedAgentName);
     setDailyTarget(String(r.todayTarget));
   };
@@ -105,6 +77,7 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
               ...r,
               name: routeName.trim(),
               code: routeCode.trim().toUpperCase(),
+              areaName: areaName.trim() || 'Rajahmundry Urban',
               assignedAgentName: agentName,
               todayTarget: Number(dailyTarget) || r.todayTarget,
             }
@@ -116,6 +89,7 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
       await ApiService.updateRoute(editingRouteId, {
         name: routeName.trim(),
         code: routeCode.trim().toUpperCase(),
+        areaName: areaName.trim() || 'Rajahmundry Urban',
         assignedAgentName: agentName,
         todayTarget: Number(dailyTarget),
       });
@@ -124,6 +98,7 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
     setEditingRouteId(null);
     setRouteName('');
     setRouteCode('');
+    setAreaName('Rajahmundry Urban');
     Alert.alert('Updated', 'Route details updated.');
   };
 
@@ -198,6 +173,17 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
                 value={routeName}
                 onChangeText={setRouteName}
                 placeholder="e.g. Alcot Gardens & Innespeta"
+                placeholderTextColor={Colors.textMuted}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Operational Area / Region *</Text>
+              <TextInput
+                style={styles.input}
+                value={areaName}
+                onChangeText={setAreaName}
+                placeholder="e.g. Rajahmundry Urban, Danavaipeta"
                 placeholderTextColor={Colors.textMuted}
               />
             </View>
@@ -292,7 +278,10 @@ export const AdminRouteAreaScreen: React.FC<{ navigation: any }> = ({ navigation
             <View style={styles.routeHeader}>
               <View style={styles.routeTitleRow}>
                 <MapPin size={16} color={Colors.primaryLight} />
-                <Text style={styles.routeName}>{r.name}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.routeName}>{r.name}</Text>
+                  <Text style={styles.routeAreaSub}>{r.areaName || 'Rajahmundry Urban'}</Text>
+                </View>
               </View>
               <Text style={styles.routeCode}>{r.code}</Text>
             </View>
@@ -543,6 +532,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: Colors.text,
+  },
+  routeAreaSub: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   routeCode: {
     fontSize: 11,

@@ -5,7 +5,6 @@ export async function GET() {
   try {
     const customers = await prisma.customer.findMany({
       include: {
-        area: true,
         route: true,
         loans: true,
       },
@@ -20,32 +19,6 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    // Ensure Branch and Area exist
-    let area = await prisma.area.findFirst();
-    if (!area) {
-      const branch = await prisma.branch.upsert({
-        where: { branchId: "BR-01" },
-        update: {},
-        create: {
-          branchId: "BR-01",
-          code: "BR-RJY",
-          name: "Rajahmundry Central Branch",
-          city: "Rajahmundry",
-          state: "Andhra Pradesh",
-          phone: "+91 883 245 6789",
-        },
-      });
-      area = await prisma.area.create({
-        data: {
-          areaId: "AREA-01",
-          name: "Rajahmundry Urban",
-          code: "RJY",
-          description: "Main Commercial Belt",
-          branchId: branch.branchId,
-        },
-      });
-    }
 
     // Ensure Route exists
     let route = null;
@@ -62,7 +35,7 @@ export async function POST(req: Request) {
             routeId: "RT-01",
             name: "Main Road & Kotipalli Beat",
             code: "RT-RJY-01",
-            areaId: area.areaId,
+            areaName: body.areaName || "Rajahmundry Urban",
             collectionFrequency: "WEEKLY",
             todayTarget: 25000,
             status: "ACTIVE",
@@ -72,8 +45,7 @@ export async function POST(req: Request) {
     }
 
     const count = await prisma.customer.count();
-    const areaPrefix = area.code || "RJY";
-    const customerCode = body.customerCode || `CUST-${areaPrefix}-${String(count + 101).padStart(3, "0")}`;
+    const customerCode = body.customerCode || `CUST-RJY-${String(count + 101).padStart(3, "0")}`;
 
     const customerData = {
       customerCode,
@@ -81,7 +53,7 @@ export async function POST(req: Request) {
       mobileNumber: body.mobileNumber || body.phone || "+91 98480 00000",
       aadhaarNumber: body.aadhaarNumber || "N/A",
       address: body.address || body.locationAddress || "Rajahmundry",
-      areaId: route.areaId || area.areaId,
+      areaName: body.areaName || route.areaName || "Rajahmundry Urban",
       routeId: route.routeId,
       occupation: body.occupation || "Self Employed",
       monthlyIncome: Number(body.monthlyIncome) || 30000,
@@ -98,7 +70,6 @@ export async function POST(req: Request) {
     const customer = await prisma.customer.create({
       data: customerData,
       include: {
-        area: true,
         route: true,
       },
     });

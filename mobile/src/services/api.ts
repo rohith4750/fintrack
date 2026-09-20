@@ -354,8 +354,8 @@ export const ApiService = {
           routeId: r.routeId,
           name: r.name,
           code: r.code,
-          areaId: r.areaId || 'AREA-01',
-          areaName: r.area?.name || 'Rajahmundry Urban',
+          areaId: r.routeId,
+          areaName: r.areaName || r.area?.name || 'Rajahmundry Urban',
           assignedAgentId: r.assignedAgentId || 'USR-02',
           assignedAgentName: r.assignedAgent?.name || 'Suresh Varma',
           collectionDay: r.collectionFrequency || 'Tuesday',
@@ -388,13 +388,13 @@ export const ApiService = {
     return ApiService.getLoans(agentId === 'USR-01' ? undefined : agentId, routeId);
   },
 
-  // Add Route
+  // Add Route (Single Table)
   addRoute: async (routeData: Omit<Route, 'id'>): Promise<Route> => {
     try {
       const res = await apiClient.post('/routes', {
         name: routeData.name,
         code: routeData.code,
-        areaId: routeData.areaId,
+        areaName: routeData.areaName || 'Rajahmundry Urban',
         assignedAgentId: routeData.assignedAgentId,
         todayTarget: routeData.todayTarget,
       });
@@ -405,10 +405,10 @@ export const ApiService = {
           routeId: r.routeId,
           name: r.name,
           code: r.code,
-          areaId: r.areaId,
-          areaName: 'Rajahmundry Urban',
+          areaId: r.routeId,
+          areaName: r.areaName || routeData.areaName || 'Rajahmundry Urban',
           assignedAgentId: r.assignedAgentId,
-          assignedAgentName: 'Suresh Varma',
+          assignedAgentName: r.assignedAgent?.name || routeData.assignedAgentName || 'Assigned Officer',
           collectionDay: r.collectionFrequency || 'Tuesday',
           totalCustomers: 0,
           todayTarget: Number(r.todayTarget) || 25000,

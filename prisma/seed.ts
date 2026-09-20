@@ -49,25 +49,6 @@ async function main() {
   }
   console.log("✓ Users seeded");
 
-  // 3. Areas
-  for (const a of initialAreas) {
-    await prisma.area.upsert({
-      where: { code: a.code },
-      update: {},
-      create: {
-        areaId: a.id,
-        name: a.name,
-        code: a.code,
-        branchId: a.branchId,
-        description: a.description,
-        totalCustomers: a.totalCustomers,
-        activeLoansCount: a.activeLoansCount,
-        totalOutstanding: a.totalOutstanding,
-      },
-    });
-  }
-  console.log("✓ Areas seeded");
-
   // 4. Routes
   for (const r of initialRoutes) {
     await prisma.route.upsert({
@@ -77,7 +58,7 @@ async function main() {
         routeId: r.id,
         name: r.name,
         code: r.code,
-        areaId: r.areaId,
+        areaName: "Rajahmundry Urban",
         assignedAgentId: r.assignedAgentId,
         collectionFrequency: r.collectionFrequency,
         totalCustomers: r.totalCustomers,
@@ -100,7 +81,7 @@ async function main() {
         mobileNumber: c.mobileNumber,
         aadhaarNumber: c.aadhaarNumber,
         address: c.address,
-        areaId: c.areaId,
+        areaName: "Rajahmundry Urban",
         routeId: c.routeId,
         occupation: c.occupation,
         monthlyIncome: c.monthlyIncome,

@@ -69,37 +69,13 @@ export async function POST() {
       });
     }
 
-    // 3. Seed Areas
-    for (const a of initialAreas) {
-      await prisma.area.upsert({
-        where: { code: a.code },
-        update: {
-          name: a.name,
-          description: a.description,
-          totalCustomers: a.totalCustomers,
-          activeLoansCount: a.activeLoansCount,
-          totalOutstanding: a.totalOutstanding,
-        },
-        create: {
-          areaId: a.id,
-          name: a.name,
-          code: a.code,
-          branchId: a.branchId,
-          description: a.description,
-          totalCustomers: a.totalCustomers,
-          activeLoansCount: a.activeLoansCount,
-          totalOutstanding: a.totalOutstanding,
-        },
-      });
-    }
-
     // 4. Seed Routes
     for (const r of initialRoutes) {
       await prisma.route.upsert({
         where: { code: r.code },
         update: {
           name: r.name,
-          areaId: r.areaId,
+          areaName: "Rajahmundry Urban",
           assignedAgentId: r.assignedAgentId,
           collectionFrequency: r.collectionFrequency,
           totalCustomers: r.totalCustomers,
@@ -111,7 +87,7 @@ export async function POST() {
           routeId: r.id,
           name: r.name,
           code: r.code,
-          areaId: r.areaId,
+          areaName: "Rajahmundry Urban",
           assignedAgentId: r.assignedAgentId,
           collectionFrequency: r.collectionFrequency,
           totalCustomers: r.totalCustomers,
@@ -148,7 +124,7 @@ export async function POST() {
           mobileNumber: c.mobileNumber,
           aadhaarNumber: c.aadhaarNumber,
           address: c.address,
-          areaId: c.areaId,
+          areaName: "Rajahmundry Urban",
           routeId: c.routeId,
           occupation: c.occupation,
           monthlyIncome: c.monthlyIncome,

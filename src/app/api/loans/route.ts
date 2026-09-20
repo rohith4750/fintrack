@@ -43,37 +43,14 @@ export async function POST(req: Request) {
 
     if (!customer) {
       // Create customer on the fly if needed
-      let area = await prisma.area.findFirst();
       let route = await prisma.route.findFirst();
-      if (!area) {
-        const branch = await prisma.branch.upsert({
-          where: { branchId: "BR-01" },
-          update: {},
-          create: {
-            branchId: "BR-01",
-            code: "BR-RJY",
-            name: "Rajahmundry Central Branch",
-            city: "Rajahmundry",
-            state: "Andhra Pradesh",
-            phone: "+91 883 245 6789",
-          },
-        });
-        area = await prisma.area.create({
-          data: {
-            areaId: "AREA-01",
-            name: "Rajahmundry Urban",
-            code: "RJY",
-            branchId: branch.branchId,
-          },
-        });
-      }
       if (!route) {
         route = await prisma.route.create({
           data: {
             routeId: "RT-01",
             name: "Main Road Beat",
             code: "RT-RJY-01",
-            areaId: area.areaId,
+            areaName: "Rajahmundry Urban",
           },
         });
       }
@@ -83,7 +60,7 @@ export async function POST(req: Request) {
           customerCode: rawCustomerId || `CUST-RJY-${Date.now().toString().slice(-4)}`,
           name: body.customerName || "Borrower",
           mobileNumber: body.phone || "+91 98480 12345",
-          areaId: route.areaId || area.areaId,
+          areaName: route.areaName || "Rajahmundry Urban",
           routeId: route.routeId,
         },
       });
@@ -101,7 +78,7 @@ export async function POST(req: Request) {
           routeId: "RT-01",
           name: "Main Road Beat",
           code: "RT-RJY-01",
-          areaId: customer.areaId,
+          areaName: "Rajahmundry Urban",
         },
       });
     }

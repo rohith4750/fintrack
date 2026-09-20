@@ -96,26 +96,6 @@ model Branch {
   phone     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  areas     Area[]
-}
-
-model Area {
-  id               String   @id @default(cuid())
-  areaId           String   @unique // e.g. "AREA-01"
-  name             String
-  code             String   @unique // e.g. "RJY"
-  description      String?
-  totalCustomers   Int      @default(0)
-  activeLoansCount Int      @default(0)
-  totalOutstanding Float    @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  branchId         String
-  branch           Branch   @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
-  routes           Route[]
-  customers        Customer[]
 }
 
 model Route {
@@ -123,6 +103,7 @@ model Route {
   routeId             String   @unique // e.g. "RT-01"
   name                String
   code                String   @unique // e.g. "RJY-R-A"
+  areaName            String   @default("Rajahmundry Urban")
   collectionFrequency String   @default("WEEKLY") // DAILY, WEEKLY, MONTHLY
   totalCustomers      Int      @default(0)
   todayTarget         Float    @default(0)
@@ -131,8 +112,6 @@ model Route {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  areaId              String
-  area                Area     @relation(fields: [areaId], references: [areaId], onDelete: Cascade)
   assignedAgentId     String?
   assignedAgent       User?    @relation(fields: [assignedAgentId], references: [userId])
   customers           Customer[]
@@ -160,11 +139,10 @@ model Customer {
   longitude        Float?
   landmark         String?
   locationAddress  String?
+  areaName         String?        @default("Rajahmundry Urban")
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
-  areaId           String
-  area             Area           @relation(fields: [areaId], references: [areaId], onDelete: Cascade)
   routeId          String
   route            Route          @relation(fields: [routeId], references: [routeId], onDelete: Cascade)
   loans            Loan[]

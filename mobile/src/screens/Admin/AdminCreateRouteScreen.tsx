@@ -28,6 +28,7 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
   const [agents, setAgents] = useState<any[]>([]);
   const [routeName, setRouteName] = useState('');
   const [routeCode, setRouteCode] = useState('');
+  const [areaName, setAreaName] = useState('Rajahmundry Urban');
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [collectionFrequency, setCollectionFrequency] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
   const [dailyTarget, setDailyTarget] = useState('25000');
@@ -72,8 +73,8 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
       const payload: Omit<Route, 'id'> = {
         name: routeName.trim(),
         code: routeCode.trim().toUpperCase(),
-        areaId: 'AREA-01',
-        areaName: 'Rajahmundry Urban',
+        areaId: 'RT-01',
+        areaName: areaName.trim() || 'Rajahmundry Urban',
         assignedAgentId: selectedAgentId || 'USR-02',
         assignedAgentName: assignedAgent?.name || 'Assigned Officer',
         collectionDay: collectionFrequency === 'WEEKLY' ? 'Tuesday' : collectionFrequency,
@@ -86,7 +87,7 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
 
       Alert.alert(
         'Beat Route Created',
-        `Route "${created.name}" (${created.code}) created and assigned successfully.`,
+        `Route "${created.name}" (${created.code}) in ${created.areaName} created successfully.`,
         [
           {
             text: 'View Routes',
@@ -123,7 +124,7 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <MapPin size={18} color={Colors.primaryLight} />
-            <Text style={styles.cardTitle}>Beat Route Details</Text>
+            <Text style={styles.cardTitle}>Beat Route & Area Details</Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -144,6 +145,18 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Operational Area / Region *</Text>
+            <TextInput
+              style={styles.input}
+              value={areaName}
+              onChangeText={setAreaName}
+              placeholder="e.g. Rajahmundry Urban, Danavaipeta"
+              placeholderTextColor={Colors.textMuted}
+            />
+            <Text style={styles.inputHint}>Single operational zone for this beat route</Text>
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Route Code *</Text>
             <TextInput
               style={styles.input}
@@ -154,14 +167,6 @@ export const AdminCreateRouteScreen: React.FC<{ navigation: any }> = ({ navigati
               autoCapitalize="characters"
             />
             <Text style={styles.inputHint}>Short identifier printed on collection receipts</Text>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Operational Area</Text>
-            <View style={styles.readOnlyBox}>
-              <Layers size={15} color={Colors.textSecondary} />
-              <Text style={styles.readOnlyText}>AREA-01 • Rajahmundry Urban (Central)</Text>
-            </View>
           </View>
         </View>
 
