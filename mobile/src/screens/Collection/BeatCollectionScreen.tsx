@@ -206,9 +206,9 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
                 })
               }
               onViewDetails={() =>
-                navigation.navigate('CustomerDetail', {
-                  customerId: cust.id,
-                  customerCode: cust.customerCode,
+                navigation.navigate('LoanLedger', {
+                  loanId: item.id,
+                  loan: item,
                 })
               }
             />

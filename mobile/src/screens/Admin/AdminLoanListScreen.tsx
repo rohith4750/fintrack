@@ -164,9 +164,9 @@ export const AdminLoanListScreen: React.FC<{ navigation: any }> = ({ navigation 
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() =>
-                  navigation.navigate('CustomerDetail', {
-                    customerId: item.customerId,
-                    customerCode: item.customerCode,
+                  navigation.navigate('LoanLedger', {
+                    loanId: item.id,
+                    loan: item,
                   })
                 }
                 style={styles.loanTop}
