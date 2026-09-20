@@ -15,7 +15,7 @@ import { Typography } from '../../theme/typography';
 import { HeaderBar } from '../../components/HeaderBar';
 import { ApiService } from '../../services/api';
 import { openGoogleMapsNavigation } from '../../services/location';
-import { Customer, Route } from '../../types';
+import { Customer, Route, Loan } from '../../types';
 import {
   Search,
   Plus,
@@ -27,11 +27,13 @@ import {
   Trash2,
   ChevronRight,
   Navigation2,
+  Banknote,
 } from 'lucide-react-native';
 
 export const AdminCustomerListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRouteId, setSelectedRouteId] = useState<string>('ALL');
   const [refreshing, setRefreshing] = useState(false);
@@ -41,12 +43,14 @@ export const AdminCustomerListScreen: React.FC<{ navigation: any }> = ({ navigat
   }, []);
 
   const loadData = async () => {
-    const [custList, routeList] = await Promise.all([
+    const [custList, routeList, loanList] = await Promise.all([
       ApiService.getCustomers(),
       ApiService.getRoutes(),
+      ApiService.getLoans(),
     ]);
     setCustomers(custList);
     setRoutes(routeList);
+    setLoans(loanList);
   };
 
   const onRefresh = async () => {
@@ -233,8 +237,33 @@ export const AdminCustomerListScreen: React.FC<{ navigation: any }> = ({ navigat
               </View>
             </TouchableOpacity>
 
-            {/* Quick Action Bar (Call, Map Navigate, Edit, Delete) */}
+            {/* Quick Action Bar (Collect, Call, Map Navigate, Edit, Delete) */}
             <View style={styles.cardActions}>
+              {(() => {
+                const activeLoan = loans.find(
+                  (l) =>
+                    (l.customerId === item.id || l.customerCode === item.customerCode || l.customerId === item.customerCode) &&
+                    l.outstandingBalance > 0 &&
+                    l.status !== 'CLOSED'
+                );
+                if (!activeLoan) return null;
+                return (
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate('CollectPayment', {
+                        loanId: activeLoan.id,
+                        customerId: item.id,
+                        loan: activeLoan,
+                      })
+                    }
+                    style={[styles.actionBtn, { backgroundColor: '#10B981', borderColor: 'transparent' }]}
+                  >
+                    <Banknote size={13} color="#FFF" />
+                    <Text style={[styles.actionBtnText, { color: '#FFF', fontWeight: '700' }]}>Collect</Text>
+                  </TouchableOpacity>
+                );
+              })()}
+
               <TouchableOpacity
                 onPress={() => handleCall(item.phone)}
                 style={styles.actionBtn}

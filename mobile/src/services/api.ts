@@ -414,14 +414,14 @@ export const ApiService = {
   // Get Assigned Routes for Agent / Admin
   getAssignedRoutes: async (agentId?: string): Promise<Route[]> => {
     const allRoutes = await ApiService.getRoutes();
-    if (!agentId || agentId === 'ALL' || agentId === 'USR-01') return allRoutes;
+    if (!agentId || agentId === 'ALL') return allRoutes;
     const filtered = allRoutes.filter((r) => r.assignedAgentId === agentId || r.assignedAgentName?.includes(agentId));
     return filtered.length > 0 ? filtered : allRoutes;
   },
 
   // Get Assigned Loans for Agent / Admin
   getAssignedLoans: async (agentId?: string, routeId?: string): Promise<Loan[]> => {
-    return ApiService.getLoans(agentId === 'USR-01' ? undefined : agentId, routeId);
+    return ApiService.getLoans(!agentId || agentId === 'ALL' ? undefined : agentId, routeId);
   },
 
   // Add Route (Single Table)

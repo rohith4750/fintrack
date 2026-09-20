@@ -39,7 +39,8 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
   const loadData = async () => {
     if (!user) return;
     try {
-      const agentId = user.userId || user.id;
+      const isAdmin = user.role === 'ADMIN';
+      const agentId = isAdmin ? undefined : (user.userId || user.id);
       const [assignedRoutes, assignedLoans] = await Promise.all([
         ApiService.getAssignedRoutes(agentId),
         ApiService.getAssignedLoans(
@@ -53,7 +54,7 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
       const activeRoutes = assignedRoutes.filter(
         (r) => routeIdsWithLoans.has(r.id) || routeIdsWithLoans.has(r.routeId || '')
       );
-      setRoutes(activeRoutes.length > 0 ? activeRoutes : []);
+      setRoutes(activeRoutes.length > 0 ? activeRoutes : assignedRoutes);
       setLoans(assignedLoans);
     } catch (e) {
       console.log('Error loading beat collection data', e);
@@ -100,7 +101,9 @@ export const BeatCollectionScreen: React.FC<{ route?: any; navigation: any }> = 
     <View style={styles.container}>
       <HeaderBar
         title="Beat Route Collection"
-        subtitle="Stop-by-Stop Borrower Recovery Sequence"
+        subtitle={user?.role === 'ADMIN' ? 'All Company Routes • Admin Field Access' : 'Stop-by-Stop Borrower Recovery Sequence'}
+        showBack={navigation.canGoBack()}
+        onBack={() => navigation.goBack()}
       />
 
       {/* Route Filter Selector */}

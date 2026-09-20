@@ -27,6 +27,8 @@ import {
   User,
   Navigation2,
   Compass,
+  Receipt,
+  Banknote,
 } from 'lucide-react-native';
 
 export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = ({
@@ -37,8 +39,9 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
 
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [loan, setLoan] = useState<Loan | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'SCHEDULE' | 'PROFILE'>('SCHEDULE');
+  const [activeTab, setActiveTab] = useState<'SCHEDULE' | 'TRANSACTIONS' | 'PROFILE'>('SCHEDULE');
   const [isUpdatingGps, setIsUpdatingGps] = useState(false);
 
   useEffect(() => {
@@ -48,9 +51,10 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
   const loadCustomerData = async () => {
     try {
       setLoading(true);
-      const [allCustomers, allLoans] = await Promise.all([
+      const [allCustomers, allLoans, allCollections] = await Promise.all([
         ApiService.getCustomers(),
         ApiService.getLoans(),
+        ApiService.getTodayCollections(),
       ]);
 
       const foundCust = allCustomers.find(
@@ -65,6 +69,15 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
         if (foundLoan) {
           setLoan(foundLoan);
         }
+
+        const myTx = allCollections.filter(
+          (c: any) =>
+            c.customerId === foundCust.id ||
+            c.customerCode === foundCust.customerCode ||
+            c.customerName === foundCust.fullName ||
+            (foundLoan && (c.loanId === foundLoan.id || c.loanNumber === foundLoan.loanNumber))
+        );
+        setTransactions(myTx);
       }
     } catch (e) {
       console.error('Error loading customer detail:', e);
@@ -267,9 +280,19 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
             style={[styles.tabBtn, activeTab === 'SCHEDULE' && styles.tabBtnActive]}
           >
             <Text style={[styles.tabText, activeTab === 'SCHEDULE' && styles.tabTextActive]}>
-              Installment Schedule {loan ? `(${loan.durationUnits} Wks)` : ''}
+              Schedule {loan ? `(${loan.durationUnits}W)` : ''}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('TRANSACTIONS')}
+            style={[styles.tabBtn, activeTab === 'TRANSACTIONS' && styles.tabBtnActive]}
+          >
+            <Text style={[styles.tabText, activeTab === 'TRANSACTIONS' && styles.tabTextActive]}>
+              Passbook ({transactions.length})
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => setActiveTab('PROFILE')}
             style={[styles.tabBtn, activeTab === 'PROFILE' && styles.tabBtnActive]}
@@ -343,6 +366,78 @@ export const CustomerDetailScreen: React.FC<{ route: any; navigation: any }> = (
               <View style={{ padding: 24, alignItems: 'center' }}>
                 <Text style={{ color: Colors.textMuted }}>No active loan schedule found.</Text>
               </View>
+            )}
+          </View>
+        )}
+
+        {/* Customer Transaction / Passbook Receipts View */}
+        {activeTab === 'TRANSACTIONS' && (
+          <View style={styles.txListContainer}>
+            {transactions.length === 0 ? (
+              <View style={styles.emptyTxCard}>
+                <Receipt size={32} color={Colors.textMuted} />
+                <Text style={styles.emptyTxTitle}>No Transaction Receipts</Text>
+                <Text style={styles.emptyTxSub}>
+                  No EMI collection receipts have been recorded for this customer yet.
+                </Text>
+              </View>
+            ) : (
+              transactions.map((tx, idx) => {
+                const isCash = tx.paymentMethod === 'CASH';
+                return (
+                  <View key={tx.id || tx.receiptNumber || idx} style={styles.txCard}>
+                    <View style={styles.txTopRow}>
+                      <View>
+                        <Text style={styles.txReceiptNumber}>{tx.receiptNumber || `Receipt #${idx + 1}`}</Text>
+                        <Text style={styles.txDate}>
+                          {tx.collectionDate || tx.time ? `${tx.collectionDate || 'Today'} at ${tx.time || ''}` : 'Recorded'}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={styles.txAmount}>₹{Number(tx.amount || 0).toLocaleString('en-IN')}</Text>
+                        <View style={[styles.txMethodBadge, isCash ? styles.txBadgeCash : styles.txBadgeUpi]}>
+                          <Text style={[styles.txBadgeText, isCash ? styles.txTextCash : styles.txTextUpi]}>
+                            {tx.paymentMethod || 'CASH'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.txDivider} />
+
+                    <View style={styles.txMetaRow}>
+                      <Text style={styles.txCollectorText}>
+                        Collected by: <Text style={{ color: Colors.text, fontWeight: '700' }}>{tx.agentName || 'Collector'}</Text>
+                      </Text>
+                      {tx.balanceAfterPayment !== undefined && (
+                        <Text style={styles.txBalanceText}>
+                          Balance: ₹{Number(tx.balanceAfterPayment).toLocaleString('en-IN')}
+                        </Text>
+                      )}
+                    </View>
+
+                    {tx.upiTransactionId && (
+                      <View style={styles.txUpiRef}>
+                        <Text style={styles.txUpiRefText}>UPI UTR: {tx.upiTransactionId}</Text>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        navigation.navigate('ReceiptView', {
+                          collection: tx,
+                          loan,
+                          customer,
+                        })
+                      }
+                      style={styles.viewReceiptBtn}
+                    >
+                      <Receipt size={13} color="#FFF" />
+                      <Text style={styles.viewReceiptBtnText}>View Thermal Receipt</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
             )}
           </View>
         )}
@@ -775,5 +870,124 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: Colors.success,
+  },
+  txListContainer: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  emptyTxCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  emptyTxTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.text,
+    marginTop: 8,
+  },
+  emptyTxSub: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  txCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  txTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  txReceiptNumber: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  txDate: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  txAmount: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#10B981',
+  },
+  txMethodBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  txBadgeCash: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  txBadgeUpi: {
+    backgroundColor: 'rgba(168, 85, 247, 0.15)',
+  },
+  txBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  txTextCash: {
+    color: '#10B981',
+  },
+  txTextUpi: {
+    color: '#A855F7',
+  },
+  txDivider: {
+    height: 1,
+    backgroundColor: Colors.surfaceBorder,
+    marginVertical: 8,
+  },
+  txMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  txCollectorText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  txBalanceText: {
+    fontSize: 11,
+    color: Colors.warning,
+    fontWeight: '600',
+  },
+  txUpiRef: {
+    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+    padding: 6,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  txUpiRefText: {
+    fontSize: 10,
+    color: '#C084FC',
+    fontWeight: '700',
+  },
+  viewReceiptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#2563EB',
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewReceiptBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

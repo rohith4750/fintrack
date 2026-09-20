@@ -30,6 +30,7 @@ import {
   Banknote,
   Sparkles,
   IndianRupee,
+  Navigation2,
 } from 'lucide-react-native';
 
 export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -148,6 +149,24 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
             >
               <MapPin size={16} color={Colors.warning} />
               <Text style={[styles.actionBtnText, { color: Colors.warning }]}>Add Beat Route</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.actionGridRow}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('BeatCollection')}
+              style={[styles.actionBtn, { backgroundColor: '#2563EB' }]}
+            >
+              <Navigation2 size={16} color="#FFF" />
+              <Text style={[styles.actionBtnText, { color: '#FFF' }]}>Beat Route Stops</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AdminCollectionsTab')}
+              style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
+            >
+              <Receipt size={16} color="#FFF" />
+              <Text style={[styles.actionBtnText, { color: '#FFF' }]}>All Receipts Ledger</Text>
             </TouchableOpacity>
           </View>
         </View>
