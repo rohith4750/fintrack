@@ -26,6 +26,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Building,
+  Banknote,
 } from 'lucide-react-native';
 
 export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -328,6 +329,20 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
           <View style={styles.menuContent}>
             <Text style={styles.menuTitle}>Office Expenses & Accounts</Text>
             <Text style={styles.menuSub}>Track Branch Expenses & Vouchers</Text>
+          </View>
+          <ChevronRight size={18} color={Colors.textSecondary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AdminHandovers')}
+          style={styles.menuCard}
+        >
+          <View style={[styles.menuIconBox, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+            <Banknote size={20} color={Colors.success} />
+          </View>
+          <View style={styles.menuContent}>
+            <Text style={styles.menuTitle}>Cash Handovers & Denominations</Text>
+            <Text style={styles.menuSub}>Vault Notes (₹500, ₹200, ₹100) • Agent Cash Reconciliation</Text>
           </View>
           <ChevronRight size={18} color={Colors.textSecondary} />
         </TouchableOpacity>

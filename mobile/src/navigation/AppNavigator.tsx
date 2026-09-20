@@ -30,6 +30,7 @@ import { AdminExpenseScreen } from '../screens/Admin/AdminExpenseScreen';
 import { AdminDisburseLoanScreen } from '../screens/Admin/AdminDisburseLoanScreen';
 import { AdminCreateCustomerScreen } from '../screens/Admin/AdminCreateCustomerScreen';
 import { AdminEditCustomerScreen } from '../screens/Admin/AdminEditCustomerScreen';
+import { AdminHandoverScreen } from '../screens/Admin/AdminHandoverScreen';
 
 // Icons
 import {
@@ -243,6 +244,7 @@ export function AppNavigator() {
             <Stack.Screen name="AdminCustomers" component={AdminCustomerListScreen} />
             <Stack.Screen name="AdminRouteArea" component={AdminRouteAreaScreen} />
             <Stack.Screen name="AdminExpenses" component={AdminExpenseScreen} />
+            <Stack.Screen name="AdminHandovers" component={AdminHandoverScreen} />
 
             {/* Collection & Detail Stack Screens */}
             <Stack.Screen name="CollectPayment" component={CollectPaymentScreen} />
